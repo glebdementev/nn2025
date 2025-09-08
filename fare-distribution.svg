@@ -1,0 +1,72 @@
+
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+      .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .count-label { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; fill: white; }
+      .tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; }
+    </style>
+  </defs>
+  <g transform="translate(60,50)">
+    
+    <!-- Chart title -->
+    <text x="255" y="-20" class="title">Fare Distribution</text>
+    
+    <!-- Bars -->
+    
+      <rect x="20" y="0" 
+            width="62" height="290"
+            fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+      
+      <text x="51" y="20"
+            class="count-label">336</text>
+      
+      <text x="51" y="315" class="tick-label">$0-10</text>
+    
+      <rect x="122" y="99.25595238095238" 
+            width="62" height="190.74404761904762"
+            fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+      
+      <text x="153" y="119.25595238095238"
+            class="count-label">221</text>
+      
+      <text x="153" y="315" class="tick-label">$10-25</text>
+    
+      <rect x="224" y="140.68452380952382" 
+            width="62" height="149.31547619047618"
+            fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+      
+      <text x="255" y="160.68452380952382"
+            class="count-label">173</text>
+      
+      <text x="255" y="315" class="tick-label">$25-50</text>
+    
+      <rect x="326" y="196.78571428571428" 
+            width="62" height="93.21428571428572"
+            fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+      
+      <text x="357" y="216.78571428571428"
+            class="count-label">108</text>
+      
+      <text x="357" y="315" class="tick-label">$50-100</text>
+    
+      <rect x="428" y="244.25595238095238" 
+            width="62" height="45.74404761904762"
+            fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+      
+      <text x="459" y="264.2559523809524"
+            class="count-label">53</text>
+      
+      <text x="459" y="315" class="tick-label">$100+</text>
+    
+    
+    <!-- Axes -->
+    <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+    <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+    
+    <!-- Axis titles -->
+    <text x="255" y="335" class="axis-label">Fare Range</text>
+    <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Number of Passengers</text>
+  </g>
+</svg>

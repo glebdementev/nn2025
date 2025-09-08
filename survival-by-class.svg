@@ -1,0 +1,101 @@
+
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+      .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .bar-label { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; fill: white; }
+      .tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; }
+      .y-tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: end; }
+    </style>
+  </defs>
+  <g transform="translate(60,50)">
+    
+    <!-- Chart title -->
+    <text x="255" y="-20" class="title">Survival Rate by Passenger Class</text>
+    
+    <!-- Bars -->
+    
+      <rect x="30" y="107.40740740740739" 
+            width="110" height="182.5925925925926"
+            fill="#1f77b4" stroke="#333" stroke-width="1"/>
+      
+      <!-- Bar value labels -->
+      <text x="85" y="127.40740740740739"
+            class="bar-label">63.0%</text>
+      
+      <!-- Class labels -->
+      <text x="85" y="315" class="tick-label">Class 1</text>
+      
+      <!-- Additional info -->
+      <text x="85" y="330" class="tick-label" font-size="10px">
+        136/216 survived
+      </text>
+    
+      <rect x="200" y="152.8804347826087" 
+            width="110" height="137.1195652173913"
+            fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+      
+      <!-- Bar value labels -->
+      <text x="255" y="172.8804347826087"
+            class="bar-label">47.3%</text>
+      
+      <!-- Class labels -->
+      <text x="255" y="315" class="tick-label">Class 2</text>
+      
+      <!-- Additional info -->
+      <text x="255" y="330" class="tick-label" font-size="10px">
+        87/184 survived
+      </text>
+    
+      <rect x="370" y="219.71486761710793" 
+            width="110" height="70.28513238289206"
+            fill="#2ca02c" stroke="#333" stroke-width="1"/>
+      
+      <!-- Bar value labels -->
+      <text x="425" y="239.71486761710793"
+            class="bar-label">24.2%</text>
+      
+      <!-- Class labels -->
+      <text x="425" y="315" class="tick-label">Class 3</text>
+      
+      <!-- Additional info -->
+      <text x="425" y="330" class="tick-label" font-size="10px">
+        119/491 survived
+      </text>
+    
+    
+    <!-- Y-axis -->
+    <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+    
+    <!-- X-axis -->
+    <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+    
+    <!-- Y-axis ticks and labels -->
+    
+      <line x1="-5" y1="290" x2="0" y2="290" stroke="#333"/>
+      <text x="-10" y="294" class="y-tick-label">0%</text>
+    
+      <line x1="-5" y1="232" x2="0" y2="232" stroke="#333"/>
+      <text x="-10" y="236" class="y-tick-label">20%</text>
+    
+      <line x1="-5" y1="174" x2="0" y2="174" stroke="#333"/>
+      <text x="-10" y="178" class="y-tick-label">40%</text>
+    
+      <line x1="-5" y1="116" x2="0" y2="116" stroke="#333"/>
+      <text x="-10" y="120" class="y-tick-label">60%</text>
+    
+      <line x1="-5" y1="58" x2="0" y2="58" stroke="#333"/>
+      <text x="-10" y="62" class="y-tick-label">80%</text>
+    
+      <line x1="-5" y1="0" x2="0" y2="0" stroke="#333"/>
+      <text x="-10" y="4" class="y-tick-label">100%</text>
+    
+    
+    <!-- Y-axis title -->
+    <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Survival Rate</text>
+    
+    <!-- X-axis title -->
+    <text x="255" y="345" class="axis-label">Passenger Class</text>
+  </g>
+</svg>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titanic Dataset Visualization</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #3498db;
+            margin: 0;
+        }
+        .stat-label {
+            color: #666;
+            margin: 5px 0 0 0;
+            font-size: 1.1em;
+        }
+        .charts-section {
+            padding: 40px;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 20px;
+            text-align: center;
+        }
+        .chart-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .insights {
+            background: #2c3e50;
+            color: white;
+            padding: 40px;
+        }
+        .insights h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        .insight-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #34495e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚢 Titanic Dataset Analysis</h1>
+            <p>Interactive visualization of the famous Titanic passenger dataset</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">891</div>
+                <div class="stat-label">Total Passengers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">342</div>
+                <div class="stat-label">Survivors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">38.4%</div>
+                <div class="stat-label">Survival Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">28</div>
+                <div class="stat-label">Median Age</div>
+            </div>
+        </div>
+        
+        <div class="charts-section">
+            <h2 style="text-align: center; color: #2c3e50; margin-bottom: 10px;">Data Visualizations</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">Explore the patterns and insights from the Titanic dataset</p>
+            
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <object data="./survival-by-class.svg" type="image/svg+xml" width="100%"></object>
+                </div>
+                <div class="chart-container">
+                    <object data="./gender-survival.svg" type="image/svg+xml" width="100%"></object>
+                </div>
+                <div class="chart-container">
+                    <object data="./age-distribution.svg" type="image/svg+xml" width="100%"></object>
+                </div>
+                <div class="chart-container">
+                    <object data="./fare-distribution.svg" type="image/svg+xml" width="100%"></object>
+                </div>
+            </div>
+        </div>
+        
+        <div class="insights">
+            <h2>📊 Key Insights</h2>
+            <div class="insight-item">
+                <strong>Class Matters:</strong> First-class passengers had a 63.0% survival rate, while third-class had only 24.2%.
+            </div>
+            <div class="insight-item">
+                <strong>Gender Disparity:</strong> Women had a 74.2% survival rate compared to 18.9% for men.
+            </div>
+            <div class="insight-item">
+                <strong>Age Factor:</strong> The median age of passengers was 28 years, with 177 passengers having missing age data.
+            </div>
+            <div class="insight-item">
+                <strong>Economic Impact:</strong> Fare distribution shows clear class segregation, with luxury passengers paying significantly more for their tickets.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated with TypeScript • Data visualization powered by SVG</p>
+            <p style="margin: 5px 0 0 0; opacity: 0.7;">Dataset: Titanic passenger manifest from Kaggle</p>
+        </div>
+    </div>
+</body>
+</html>

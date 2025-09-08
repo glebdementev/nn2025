@@ -1,1 +1,603 @@
-# Some content
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titanic Dataset Visualization | GitHub Pages</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="10" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="80" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-100px); }
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 300;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero .subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+        
+        .stats-overview {
+            background: #f8f9fa;
+            padding: 50px 40px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 35px 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        }
+        
+        .stat-number {
+            font-size: clamp(2.2rem, 4vw, 3rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .visualizations {
+            padding: 60px 40px;
+            background: white;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .section-title {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .section-subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+        
+        .chart-container svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .insights {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 60px 40px;
+        }
+        
+        .insights-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .insights h2 {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            color: #3498db;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+        }
+        
+        .insight-item {
+            padding: 25px;
+            background: rgba(52, 152, 219, 0.12);
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+            transition: all 0.3s ease;
+        }
+        
+        .insight-item:hover {
+            background: rgba(52, 152, 219, 0.18);
+            transform: translateX(5px);
+        }
+        
+        .insight-item strong {
+            color: #3498db;
+            font-size: 1.1rem;
+        }
+        
+        .footer {
+            background: #1a252f;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+            opacity: 0.8;
+        }
+        
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer a:hover {
+            color: #5dade2;
+        }
+        
+        .github-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .github-link:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 40px 20px;
+            }
+            
+            .stats-overview,
+            .visualizations,
+            .insights {
+                padding: 40px 20px;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .chart-container {
+                padding: 20px;
+            }
+            
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>🚢 Titanic Dataset Analysis</h1>
+            <p class="subtitle">Interactive Data Visualization & Statistical Analysis</p>
+        </section>
+        
+        <!-- Statistics Overview -->
+        <section class="stats-overview">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">891</div>
+                    <div class="stat-label">Total Passengers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">342</div>
+                    <div class="stat-label">Survivors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">38.4%</div>
+                    <div class="stat-label">Survival Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">28</div>
+                    <div class="stat-label">Median Age</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Data Visualizations -->
+        <section class="visualizations">
+            <div class="section-header">
+                <h2 class="section-title">Data Visualizations</h2>
+                <p class="section-subtitle">Explore the patterns and insights hidden within the Titanic passenger dataset</p>
+            </div>
+            
+            <div class="charts-grid">
+                <!-- Survival by Class Chart -->
+                <div class="chart-container">
+                    <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+                        <defs>
+                            <style>
+                                .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+                                .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+                                .bar-label { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; fill: white; }
+                                .tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; }
+                                .y-tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: end; }
+                            </style>
+                        </defs>
+                        <g transform="translate(60,50)">
+                            <!-- Chart title -->
+                            <text x="255" y="-20" class="title">Survival Rate by Passenger Class</text>
+                            
+                            <!-- Bars -->
+                            <rect x="30" y="107.40740740740739" width="110" height="182.5925925925926" fill="#1f77b4" stroke="#333" stroke-width="1"/>
+                            <text x="85" y="127.40740740740739" class="bar-label">63.0%</text>
+                            <text x="85" y="315" class="tick-label">Class 1</text>
+                            <text x="85" y="330" class="tick-label" font-size="10px">136/216 survived</text>
+                            
+                            <rect x="200" y="152.8804347826087" width="110" height="137.1195652173913" fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+                            <text x="255" y="172.8804347826087" class="bar-label">47.3%</text>
+                            <text x="255" y="315" class="tick-label">Class 2</text>
+                            <text x="255" y="330" class="tick-label" font-size="10px">87/184 survived</text>
+                            
+                            <rect x="370" y="219.71486761710793" width="110" height="70.28513238289206" fill="#2ca02c" stroke="#333" stroke-width="1"/>
+                            <text x="425" y="239.71486761710793" class="bar-label">24.2%</text>
+                            <text x="425" y="315" class="tick-label">Class 3</text>
+                            <text x="425" y="330" class="tick-label" font-size="10px">119/491 survived</text>
+                            
+                            <!-- Axes -->
+                            <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+                            <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- Y-axis ticks and labels -->
+                            <line x1="-5" y1="290" x2="0" y2="290" stroke="#333"/>
+                            <text x="-10" y="294" class="y-tick-label">0%</text>
+                            <line x1="-5" y1="232" x2="0" y2="232" stroke="#333"/>
+                            <text x="-10" y="236" class="y-tick-label">20%</text>
+                            <line x1="-5" y1="174" x2="0" y2="174" stroke="#333"/>
+                            <text x="-10" y="178" class="y-tick-label">40%</text>
+                            <line x1="-5" y1="116" x2="0" y2="116" stroke="#333"/>
+                            <text x="-10" y="120" class="y-tick-label">60%</text>
+                            <line x1="-5" y1="58" x2="0" y2="58" stroke="#333"/>
+                            <text x="-10" y="62" class="y-tick-label">80%</text>
+                            <line x1="-5" y1="0" x2="0" y2="0" stroke="#333"/>
+                            <text x="-10" y="4" class="y-tick-label">100%</text>
+                            
+                            <!-- Axis titles -->
+                            <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Survival Rate</text>
+                            <text x="255" y="345" class="axis-label">Passenger Class</text>
+                        </g>
+                    </svg>
+                </div>
+                
+                <!-- Gender Survival Chart -->
+                <div class="chart-container">
+                    <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+                        <defs>
+                            <style>
+                                .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+                                .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+                                .bar-label { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; fill: white; }
+                                .tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; }
+                                .y-tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: end; }
+                            </style>
+                        </defs>
+                        <g transform="translate(60,50)">
+                            <!-- Chart title -->
+                            <text x="255" y="-20" class="title">Survival Rate by Gender</text>
+                            
+                            <!-- Bars -->
+                            <rect x="60" y="235.21663778162912" width="135" height="54.78336221837088" fill="#3498db" stroke="#333" stroke-width="1"/>
+                            <text x="127.5" y="255.21663778162912" class="bar-label">18.9%</text>
+                            <text x="127.5" y="315" class="tick-label">Male</text>
+                            <text x="127.5" y="330" class="tick-label" font-size="10px">109/577 survived</text>
+                            
+                            <rect x="315" y="74.80891719745225" width="135" height="215.19108280254775" fill="#e74c3c" stroke="#333" stroke-width="1"/>
+                            <text x="382.5" y="94.80891719745225" class="bar-label">74.2%</text>
+                            <text x="382.5" y="315" class="tick-label">Female</text>
+                            <text x="382.5" y="330" class="tick-label" font-size="10px">233/314 survived</text>
+                            
+                            <!-- Axes -->
+                            <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+                            <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- Y-axis ticks and labels -->
+                            <line x1="-5" y1="290" x2="0" y2="290" stroke="#333"/>
+                            <text x="-10" y="294" class="y-tick-label">0%</text>
+                            <line x1="-5" y1="232" x2="0" y2="232" stroke="#333"/>
+                            <text x="-10" y="236" class="y-tick-label">20%</text>
+                            <line x1="-5" y1="174" x2="0" y2="174" stroke="#333"/>
+                            <text x="-10" y="178" class="y-tick-label">40%</text>
+                            <line x1="-5" y1="116" x2="0" y2="116" stroke="#333"/>
+                            <text x="-10" y="120" class="y-tick-label">60%</text>
+                            <line x1="-5" y1="58" x2="0" y2="58" stroke="#333"/>
+                            <text x="-10" y="62" class="y-tick-label">80%</text>
+                            <line x1="-5" y1="0" x2="0" y2="0" stroke="#333"/>
+                            <text x="-10" y="4" class="y-tick-label">100%</text>
+                            
+                            <!-- Axis titles -->
+                            <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Survival Rate</text>
+                            <text x="255" y="345" class="axis-label">Gender</text>
+                        </g>
+                    </svg>
+                </div>
+                
+                <!-- Age Distribution Chart -->
+                <div class="chart-container">
+                    <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+                        <defs>
+                            <style>
+                                .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+                                .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+                                .count-label { font-family: Arial, sans-serif; font-size: 10px; text-anchor: middle; }
+                                .tick-label { font-family: Arial, sans-serif; font-size: 10px; text-anchor: middle; }
+                            </style>
+                        </defs>
+                        <g transform="translate(60,50)">
+                            <!-- Chart title -->
+                            <text x="255" y="-20" class="title">Age Distribution of Passengers</text>
+                            
+                            <!-- Bars -->
+                            <rect x="0" y="188.24561403508773" width="30.875" height="101.75438596491227" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="15.9375" y="183.24561403508773" class="count-label">40</text>
+                            
+                            <rect x="31.875" y="234.03508771929825" width="30.875" height="55.96491228070175" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="47.8125" y="229.03508771929825" class="count-label">22</text>
+                            
+                            <rect x="63.75" y="249.2982456140351" width="30.875" height="40.70175438596491" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="79.6875" y="244.2982456140351" class="count-label">16</text>
+                            
+                            <rect x="95.625" y="71.2280701754386" width="30.875" height="218.7719298245614" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="111.5625" y="66.2280701754386" class="count-label">86</text>
+                            
+                            <rect x="127.5" y="0" width="30.875" height="290" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="143.4375" y="-5" class="count-label">114</text>
+                            
+                            <rect x="159.375" y="20.350877192982466" width="30.875" height="269.64912280701753" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="175.3125" y="15.350877192982466" class="count-label">106</text>
+                            
+                            <rect x="191.25" y="48.333333333333314" width="30.875" height="241.66666666666669" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="207.1875" y="43.333333333333314" class="count-label">95</text>
+                            
+                            <rect x="223.125" y="106.84210526315792" width="30.875" height="183.15789473684208" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="239.0625" y="101.84210526315792" class="count-label">72</text>
+                            
+                            <rect x="255" y="167.89473684210526" width="30.875" height="122.10526315789473" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="270.9375" y="162.89473684210526" class="count-label">48</text>
+                            
+                            <rect x="286.875" y="185.7017543859649" width="30.875" height="104.2982456140351" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="302.8125" y="180.7017543859649" class="count-label">41</text>
+                            
+                            <rect x="318.75" y="208.5964912280702" width="30.875" height="81.40350877192982" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="334.6875" y="203.5964912280702" class="count-label">32</text>
+                            
+                            <rect x="350.625" y="249.2982456140351" width="30.875" height="40.70175438596491" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="366.5625" y="244.2982456140351" class="count-label">16</text>
+                            
+                            <rect x="382.5" y="251.8421052631579" width="30.875" height="38.1578947368421" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="398.4375" y="246.8421052631579" class="count-label">15</text>
+                            
+                            <rect x="414.375" y="279.82456140350877" width="30.875" height="10.175438596491228" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="430.3125" y="274.82456140350877" class="count-label">4</text>
+                            
+                            <rect x="446.25" y="274.7368421052632" width="30.875" height="15.26315789473684" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            <text x="462.1875" y="269.7368421052632" class="count-label">6</text>
+                            
+                            <rect x="478.125" y="290" width="30.875" height="0" fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+                            
+                            <!-- Axes -->
+                            <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+                            <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- X-axis labels -->
+                            <text x="15.9375" y="310" class="tick-label">0-5</text>
+                            <text x="79.6875" y="310" class="tick-label">10-15</text>
+                            <text x="143.4375" y="310" class="tick-label">20-25</text>
+                            <text x="207.1875" y="310" class="tick-label">30-35</text>
+                            <text x="270.9375" y="310" class="tick-label">40-45</text>
+                            <text x="334.6875" y="310" class="tick-label">50-55</text>
+                            <text x="398.4375" y="310" class="tick-label">60-65</text>
+                            <text x="462.1875" y="310" class="tick-label">70-75</text>
+                            
+                            <!-- Chart titles -->
+                            <text x="255" y="335" class="axis-label">Age (years)</text>
+                            <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Number of Passengers</text>
+                        </g>
+                    </svg>
+                </div>
+                
+                <!-- Fare Distribution Chart -->
+                <div class="chart-container">
+                    <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+                        <defs>
+                            <style>
+                                .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+                                .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+                                .count-label { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; text-anchor: middle; fill: white; }
+                                .tick-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: middle; }
+                            </style>
+                        </defs>
+                        <g transform="translate(60,50)">
+                            <!-- Chart title -->
+                            <text x="255" y="-20" class="title">Fare Distribution</text>
+                            
+                            <!-- Bars -->
+                            <rect x="20" y="0" width="62" height="290" fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+                            <text x="51" y="20" class="count-label">336</text>
+                            <text x="51" y="315" class="tick-label">$0-10</text>
+                            
+                            <rect x="122" y="99.25595238095238" width="62" height="190.74404761904762" fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+                            <text x="153" y="119.25595238095238" class="count-label">221</text>
+                            <text x="153" y="315" class="tick-label">$10-25</text>
+                            
+                            <rect x="224" y="140.68452380952382" width="62" height="149.31547619047618" fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+                            <text x="255" y="160.68452380952382" class="count-label">173</text>
+                            <text x="255" y="315" class="tick-label">$25-50</text>
+                            
+                            <rect x="326" y="196.78571428571428" width="62" height="93.21428571428572" fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+                            <text x="357" y="216.78571428571428" class="count-label">108</text>
+                            <text x="357" y="315" class="tick-label">$50-100</text>
+                            
+                            <rect x="428" y="244.25595238095238" width="62" height="45.74404761904762" fill="#ff7f0e" stroke="#333" stroke-width="1"/>
+                            <text x="459" y="264.2559523809524" class="count-label">53</text>
+                            <text x="459" y="315" class="tick-label">$100+</text>
+                            
+                            <!-- Axes -->
+                            <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+                            <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- Axis titles -->
+                            <text x="255" y="335" class="axis-label">Fare Range</text>
+                            <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Number of Passengers</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Key Insights -->
+        <section class="insights">
+            <div class="insights-content">
+                <h2>📊 Key Insights from the Data</h2>
+                <div class="insights-grid">
+                    <div class="insight-item">
+                        <strong>Social Class Impact:</strong> First-class passengers had a 63.0% survival rate compared to only 24.2% for third-class passengers, highlighting the stark inequality in survival chances based on social status.
+                    </div>
+                    <div class="insight-item">
+                        <strong>Gender Disparity:</strong> Women had a dramatically higher survival rate of 74.2% compared to men at 18.9%, reflecting the "women and children first" maritime protocol.
+                    </div>
+                    <div class="insight-item">
+                        <strong>Age Demographics:</strong> The median passenger age was 28 years, with 177 passengers missing age data. The majority of passengers were in their 20s and 30s.
+                    </div>
+                    <div class="insight-item">
+                        <strong>Economic Stratification:</strong> Fare distribution reveals clear economic classes, with 336 passengers paying less than $10 while 53 paid over $100, showing extreme wealth disparity.
+                    </div>
+                    <div class="insight-item">
+                        <strong>Family Advantage:</strong> Passengers traveling with family members had a 50.6% survival rate compared to 30.4% for solo travelers, suggesting family groups helped each other survive.
+                    </div>
+                    <div class="insight-item">
+                        <strong>Embarkation Patterns:</strong> 72.3% of passengers boarded at Southampton, with smaller numbers from Cherbourg (18.9%) and Queenstown (8.6%), reflecting the ship's route through British and Irish ports.
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <p><strong>Titanic Dataset Visualization</strong></p>
+            <p>Built with TypeScript • Powered by SVG & Modern CSS</p>
+            <p>Dataset: <a href="https://www.kaggle.com/c/titanic" target="_blank">Kaggle Titanic Competition</a></p>
+            <a href="https://github.com/glebdementev/nn2025" target="_blank" class="github-link">View Source Code on GitHub</a>
+        </footer>
+    </div>
+</body>
+</html>

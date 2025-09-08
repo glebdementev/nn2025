@@ -1,0 +1,203 @@
+
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+      .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .count-label { font-family: Arial, sans-serif; font-size: 10px; text-anchor: middle; }
+      .tick-label { font-family: Arial, sans-serif; font-size: 10px; text-anchor: middle; }
+    </style>
+  </defs>
+  <g transform="translate(60,50)">
+    
+    <!-- Chart title -->
+    <text x="255" y="-20" class="title">Age Distribution of Passengers</text>
+    
+    <!-- Bars -->
+    
+      <rect x="0" y="188.24561403508773" 
+            width="30.875" height="101.75438596491227"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="15.9375" y="183.24561403508773"
+              class="count-label">40</text>
+      
+    
+      <rect x="31.875" y="234.03508771929825" 
+            width="30.875" height="55.96491228070175"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="47.8125" y="229.03508771929825"
+              class="count-label">22</text>
+      
+    
+      <rect x="63.75" y="249.2982456140351" 
+            width="30.875" height="40.70175438596491"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="79.6875" y="244.2982456140351"
+              class="count-label">16</text>
+      
+    
+      <rect x="95.625" y="71.2280701754386" 
+            width="30.875" height="218.7719298245614"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="111.5625" y="66.2280701754386"
+              class="count-label">86</text>
+      
+    
+      <rect x="127.5" y="0" 
+            width="30.875" height="290"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="143.4375" y="-5"
+              class="count-label">114</text>
+      
+    
+      <rect x="159.375" y="20.350877192982466" 
+            width="30.875" height="269.64912280701753"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="175.3125" y="15.350877192982466"
+              class="count-label">106</text>
+      
+    
+      <rect x="191.25" y="48.333333333333314" 
+            width="30.875" height="241.66666666666669"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="207.1875" y="43.333333333333314"
+              class="count-label">95</text>
+      
+    
+      <rect x="223.125" y="106.84210526315792" 
+            width="30.875" height="183.15789473684208"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="239.0625" y="101.84210526315792"
+              class="count-label">72</text>
+      
+    
+      <rect x="255" y="167.89473684210526" 
+            width="30.875" height="122.10526315789473"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="270.9375" y="162.89473684210526"
+              class="count-label">48</text>
+      
+    
+      <rect x="286.875" y="185.7017543859649" 
+            width="30.875" height="104.2982456140351"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="302.8125" y="180.7017543859649"
+              class="count-label">41</text>
+      
+    
+      <rect x="318.75" y="208.5964912280702" 
+            width="30.875" height="81.40350877192982"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="334.6875" y="203.5964912280702"
+              class="count-label">32</text>
+      
+    
+      <rect x="350.625" y="249.2982456140351" 
+            width="30.875" height="40.70175438596491"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="366.5625" y="244.2982456140351"
+              class="count-label">16</text>
+      
+    
+      <rect x="382.5" y="251.8421052631579" 
+            width="30.875" height="38.1578947368421"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="398.4375" y="246.8421052631579"
+              class="count-label">15</text>
+      
+    
+      <rect x="414.375" y="279.82456140350877" 
+            width="30.875" height="10.175438596491228"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="430.3125" y="274.82456140350877"
+              class="count-label">4</text>
+      
+    
+      <rect x="446.25" y="274.7368421052632" 
+            width="30.875" height="15.26315789473684"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+        <text x="462.1875" y="269.7368421052632"
+              class="count-label">6</text>
+      
+    
+      <rect x="478.125" y="290" 
+            width="30.875" height="0"
+            fill="#69b3a2" stroke="#333" stroke-width="0.5"/>
+      
+      
+    
+    
+    <!-- Axes -->
+    <line x1="0" y1="0" x2="0" y2="290" stroke="#333" stroke-width="2"/>
+    <line x1="0" y1="290" x2="510" y2="290" stroke="#333" stroke-width="2"/>
+    
+    <!-- X-axis labels -->
+    
+      <text x="15.9375" y="310" class="tick-label">
+        0-5
+      </text>
+    
+      <text x="79.6875" y="310" class="tick-label">
+        10-15
+      </text>
+    
+      <text x="143.4375" y="310" class="tick-label">
+        20-25
+      </text>
+    
+      <text x="207.1875" y="310" class="tick-label">
+        30-35
+      </text>
+    
+      <text x="270.9375" y="310" class="tick-label">
+        40-45
+      </text>
+    
+      <text x="334.6875" y="310" class="tick-label">
+        50-55
+      </text>
+    
+      <text x="398.4375" y="310" class="tick-label">
+        60-65
+      </text>
+    
+      <text x="462.1875" y="310" class="tick-label">
+        70-75
+      </text>
+    
+    
+    <!-- Chart titles -->
+    <text x="255" y="335" class="axis-label">Age (years)</text>
+    <text transform="rotate(-90)" x="-145" y="-35" class="axis-label">Number of Passengers</text>
+  </g>
+</svg>
