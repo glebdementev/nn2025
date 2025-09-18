@@ -1,0 +1,109 @@
+<svg width="700" height="500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 500">
+    <defs>
+        <style>
+            .chart-title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; text-anchor: middle; fill: #2c3e50; }
+            .axis-label { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #34495e; }
+            .bar-label { font-family: Arial, sans-serif; font-size: 11px; text-anchor: end; fill: #2c3e50; }
+            .importance-label { font-family: Arial, sans-serif; font-size: 10px; text-anchor: start; fill: white; font-weight: bold; }
+            .tick-label { font-family: Arial, sans-serif; font-size: 10px; text-anchor: end; fill: #7f8c8d; }
+        </style>
+        <linearGradient id="barGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#e74c3c;stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:#c0392b;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="barGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#3498db;stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+        </linearGradient>
+        <linearGradient id="barGradient3" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#2ecc71;stop-opacity:0.8" />
+            <stop offset="100%" style="stop-color:#27ae60;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+    
+    <g transform="translate(120,60)">
+        <!-- Chart title -->
+        <text x="270.0" y="-20" class="chart-title">Most Important Factors Affecting Titanic Survival</text>
+        
+        <!-- Bars -->
+        <rect x="0" y="10.0" width="440.0" height="37.5" 
+              fill="url(#barGradient1)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="34.25" class="bar-label">Gender</text>
+        
+        <text x="445.0" y="34.25" class="importance-label" fill="#2c3e50">
+            0.243 (100.0%)
+        </text>
+        <rect x="0" y="52.5" width="332.2979286039392" height="37.5" 
+              fill="url(#barGradient2)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="76.75" class="bar-label">Ticket Fare</text>
+        
+        <text x="337.2979286039392" y="76.75" class="importance-label" fill="#2c3e50">
+            0.183 (75.5%)
+        </text>
+        <rect x="0" y="95.0" width="263.4826897210754" height="37.5" 
+              fill="url(#barGradient3)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="119.25" class="bar-label">Age</text>
+        
+        <text x="268.4826897210754" y="119.25" class="importance-label" fill="#2c3e50">
+            0.145 (59.9%)
+        </text>
+        <rect x="0" y="137.5" width="226.25028417613927" height="37.5" 
+              fill="url(#barGradient1)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="161.75" class="bar-label">Social Title</text>
+        
+        <text x="231.25028417613927" y="161.75" class="importance-label" fill="#2c3e50">
+            0.125 (51.4%)
+        </text>
+        <rect x="0" y="180.0" width="153.85898625251178" height="37.5" 
+              fill="url(#barGradient2)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="204.25" class="bar-label">Passenger Class</text>
+        
+        <text x="158.85898625251178" y="204.25" class="importance-label" fill="#2c3e50">
+            0.085 (35.0%)
+        </text>
+        <rect x="0" y="222.5" width="100.72085296163527" height="37.5" 
+              fill="url(#barGradient3)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="246.75" class="bar-label">Family Size</text>
+        
+        <text x="105.72085296163527" y="246.75" class="importance-label" fill="#2c3e50">
+            0.056 (22.9%)
+        </text>
+        <rect x="0" y="265.0" width="70.12048090156507" height="37.5" 
+              fill="url(#barGradient1)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="289.25" class="bar-label">Fare Category</text>
+        
+        <text x="75.12048090156507" y="289.25" class="importance-label" fill="#2c3e50">
+            0.039 (15.9%)
+        </text>
+        <rect x="0" y="307.5" width="63.54759908632451" height="37.5" 
+              fill="url(#barGradient2)" stroke="#2c3e50" stroke-width="0.5" rx="2"/>
+        
+        <text x="-5" y="331.75" class="bar-label">Siblings/Spouses</text>
+        
+        <text x="68.54759908632451" y="331.75" class="importance-label" fill="#2c3e50">
+            0.035 (14.4%)
+        </text>
+        
+        <!-- Y-axis -->
+        <line x1="-2" y1="0" x2="-2" y2="360" stroke="#bdc3c7" stroke-width="1"/>
+        
+        <!-- X-axis -->
+        <line x1="0" y1="360" x2="540" y2="360" stroke="#bdc3c7" stroke-width="1"/>
+        
+        <!-- X-axis title -->
+        <text x="270.0" y="395" class="axis-label">Feature Importance Score</text>
+        
+        <!-- Subtitle -->
+        <text x="270.0" y="-2" class="axis-label" font-size="12px" fill="#7f8c8d">
+            Based on Random Forest Machine Learning Analysis
+        </text>
+        
+    </g>
+</svg>
