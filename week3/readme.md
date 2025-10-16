@@ -10,11 +10,13 @@ Context:
     
 -   CSV format: each row = label (0–9) followed by 784 pixel values (0–255) with no header.
     
--   Do NOT fetch data over the network; parse the two uploaded files in the browser, normalize pixels to , reshape to [N,28,28,1], and one‑hot labels to depth 10.[tensorflow](https://www.tensorflow.org/tutorials/load_data/csv?hl=ko)
+-   Do NOT fetch data over the network; parse the two uploaded files in the browser, normalize pixels to [0,1], reshape to [N,28,28,1], and one‑hot labels to depth 10. [tensorflow](https://www.tensorflow.org/tutorials/load_data/csv?hl=ko)
     
 -   Implement FILE‑BASED model Save/Load only: download model.json + weights.bin, and reload from user‑selected files (no IndexedDB/LocalStorage).
     
--   Include training, evaluation with charts, and a test preview that displays 5 random test images in one row with predicted labels.
+-   Denoising task: add random noise to the test (and training/validation) images and train a CNN autoencoder to reconstruct clean digits.
+    
+-   Include training with live charts, evaluation of denoising quality, and a preview that displays 5 random test images showing noisy input vs. denoised output side‑by‑side.
     
 
 Instruction:  
@@ -38,7 +40,7 @@ Output exactly three fenced code blocks, in this order, labeled “index.html”
             
         -   Model load inputs: <input type="file" id="upload-json" accept=".json"> and <input type="file" id="upload-weights" accept=".bin">
             
-    -   Sections: Data Status, Training Logs, Metrics (overall accuracy + charts), Random 5 Preview (row of canvases + predicted labels), Model Info (layers/params).
+    -   Sections: Data Status, Training Logs, Metrics (denoising loss/MSE + charts), Random 5 Preview (row where each item shows Noisy vs. Denoised canvases), Model Info (layers/params).
         
     -   Defer‑load data-loader.js then app.js.
         
@@ -50,15 +52,27 @@ Output exactly three fenced code blocks, in this order, labeled “index.html”
         
     -   Normalize pixels /255, reshape to [N,28,28,1], one‑hot labels depth 10.
         
+    -   Add random noise utilities:
+        
+        -   function addGaussianNoise(xs, std=0.5): returns xsNoisy clipped to [0,1].
+        
+        -   function makeNoisyCopy(xs, std=0.5): convenience wrapper returning a new tensor.
+        
+        -   loadTestFromFiles(file): also prepares and stores noisy test tensors {xs, ys, noisyXs}.
+        
+        -   function getRandomTestDenoiseBatch(cleanXs, noisyXs, k=5): returns matching batches for preview.
+        
     -   Provide:
         
         -   async function loadTrainFromFiles(file): returns {xs, ys}
             
-        -   async function loadTestFromFiles(file): returns {xs, ys}
+        -   async function loadTestFromFiles(file): returns {xs, ys, noisyXs}
             
         -   function splitTrainVal(xs, ys, valRatio=0.1): returns {trainXs, trainYs, valXs, valYs}
             
         -   function getRandomTestBatch(xs, ys, k=5): returns tensors for preview
+            
+        -   function getRandomTestDenoiseBatch(cleanXs, noisyXs, k=5)
             
         -   function draw28x28ToCanvas(tensor, canvas, scale=4)
             
@@ -68,15 +82,15 @@ Output exactly three fenced code blocks, in this order, labeled “index.html”
     
     -   Wire UI:
         
-        -   onLoadData: read both CSV files, build tensors, and show counts.
+        -   onLoadData: read both CSV files, build tensors, and show counts. Also create and store noisy test tensors for denoising.
             
-        -   onTrain: build and train the CNN with tfjs‑vis fitCallbacks.
+        -   onTrain: build and train a CNN autoencoder with tfjs‑vis fitCallbacks using noisy inputs → clean outputs.
             
-        -   onEvaluate: compute test accuracy; render confusion matrix heatmap and per‑class accuracy bar chart in Visor; print overall accuracy.
+        -   onEvaluate: compute denoising quality (e.g., MSE) on the noisy test set vs. clean targets; display charts for loss history.
             
-        -   onTestFive: sample 5 random test images, render in one horizontal row; print predicted labels under each (green if correct, red if wrong).
+        -   onTestFive: sample 5 random test images and display Noisy vs. Denoised canvases for each item in one horizontal row.
             
-        -   onSaveDownload: await model.save('downloads://mnist-cnn')
+        -   onSaveDownload: await model.save('downloads://mnist-denoiser')
             
         -   onLoadFromFiles: const m = await tf.loadLayersModel(tf.io.browserFiles([jsonFile, binFile])); replace current model, model.summary(), rebind buttons.
             
@@ -84,26 +98,19 @@ Output exactly three fenced code blocks, in this order, labeled “index.html”
             
     -   Model:
         
-        -   tf.sequential([  
-            Conv2D(32, 3, activation='relu', padding='same', inputShape:),[tensorflow](https://www.tensorflow.org/tutorials/load_data/csv?hl=ko)  
-            Conv2D(64, 3, activation='relu', padding='same'),  
-            MaxPool2D(2),  
-            Dropout(0.25),  
-            Flatten(),  
-            Dense(128, activation='relu'),  
-            Dropout(0.5),  
-            Dense(10, activation='softmax')  
-            ]);
+        -   CNN Autoencoder (encoder + decoder):  
+            Encoder: Conv2D(32,3,'relu','same') → MaxPool2D(2,'same') → Conv2D(64,3,'relu','same') → MaxPool2D(2,'same')  
+            Decoder: Conv2DTranspose(64,3,strides=2,'same','relu') → Conv2DTranspose(32,3,strides=2,'same','relu') → Conv2D(1,3,'same','sigmoid')
             
-        -   Compile: optimizer='adam', loss='categoricalCrossentropy', metrics=['accuracy'].
+        -   Compile: optimizer='adam', loss='meanSquaredError'.
             
-        -   Training defaults: epochs 5–10, batchSize 64–128, shuffle true; record duration and best val accuracy.
+        -   Training defaults: epochs 5–10, batchSize 64–128, shuffle true; record duration and best val loss.
             
     -   Charts (tfjs‑vis):
         
-        -   Live loss/val_loss and acc/val_acc during fit.
+        -   Live loss/val_loss during fit.
             
-        -   Confusion matrix and per‑class accuracy on evaluation.
+        -   Show scalar metrics for denoising evaluation (e.g., MSE).
             
     -   Performance & safety:
         

@@ -63,41 +63,44 @@ class MNISTApp {
             this.isTraining = true;
             this.showStatus('Starting training...');
             
-            // Split training data
-            const { trainXs, trainYs, valXs, valYs } = this.dataLoader.splitTrainVal(
+            // Split training data (targets are clean images for denoising)
+            const { trainXs, valXs } = this.dataLoader.splitTrainVal(
                 this.trainData.xs, this.trainData.ys, 0.1
             );
+            // Create noisy inputs matching the splits
+            const noisyTrainXs = this.dataLoader.makeNoisyCopy(trainXs, 0.5);
+            const noisyValXs = this.dataLoader.makeNoisyCopy(valXs, 0.5);
 
             // Create or get model
             if (!this.model) {
-                this.model = this.createModel();
+                this.model = this.createDenoiserModel();
                 this.updateModelInfo();
             }
 
             // Train with tfjs-vis callbacks
             const startTime = Date.now();
-            const history = await this.model.fit(trainXs, trainYs, {
+            const history = await this.model.fit(noisyTrainXs, trainXs, {
                 epochs: 5,
                 batchSize: 128,
-                validationData: [valXs, valYs],
+                validationData: [noisyValXs, valXs],
                 shuffle: true,
                 callbacks: tfvis.show.fitCallbacks(
-                    { name: 'Training Performance' },
-                    ['loss', 'val_loss', 'acc', 'val_acc'],
+                    { name: 'Denoiser Training' },
+                    ['loss', 'val_loss'],
                     { callbacks: ['onEpochEnd'] }
                 )
             });
 
             const duration = (Date.now() - startTime) / 1000;
-            const bestValAcc = Math.max(...history.history.val_acc);
+            const bestValLoss = Math.min(...history.history.val_loss);
             
-            this.showStatus(`Training completed in ${duration.toFixed(1)}s. Best val_acc: ${bestValAcc.toFixed(4)}`);
+            this.showStatus(`Training completed in ${duration.toFixed(1)}s. Best val_loss: ${bestValLoss.toFixed(4)}`);
             
             // Clean up
             trainXs.dispose();
-            trainYs.dispose();
             valXs.dispose();
-            valYs.dispose();
+            noisyTrainXs.dispose();
+            noisyValXs.dispose();
             
         } catch (error) {
             this.showError(`Training failed: ${error.message}`);
@@ -111,84 +114,38 @@ class MNISTApp {
             this.showError('No model available. Please train or load a model first.');
             return;
         }
-
-        if (!this.testData) {
-            this.showError('No test data available');
+        if (!this.testData || !this.testData.noisyXs) {
+            this.showError('No noisy test data available');
             return;
         }
-
         try {
-            this.showStatus('Evaluating model...');
-            
-            const testXs = this.testData.xs;
-            const testYs = this.testData.ys;
-            
-            // Get predictions
-            const predictions = this.model.predict(testXs);
-            const predictedLabels = predictions.argMax(-1);
-            const trueLabels = testYs.argMax(-1);
-            
-            // Calculate accuracy
-            const accuracy = await this.calculateAccuracy(predictedLabels, trueLabels);
-            
-            // Create confusion matrix data
-            const confusionMatrix = await this.createConfusionMatrix(predictedLabels, trueLabels);
-            
-            // Show metrics in visor
-            const metricsContainer = { name: 'Test Metrics', tab: 'Evaluation' };
-            
-            // Overall accuracy
-            tfvis.show.modelSummary(metricsContainer, this.model);
-            tfvis.show.perClassAccuracy(metricsContainer, 
-                { values: this.calculatePerClassAccuracy(confusionMatrix) }, 
-                ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-            );
-            
-            // Confusion matrix
-            tfvis.render.confusionMatrix(metricsContainer, {
-                values: confusionMatrix,
-                tickLabels: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-            });
-            
-            this.showStatus(`Test accuracy: ${(accuracy * 100).toFixed(2)}%`);
-            
-            // Clean up
-            predictions.dispose();
-            predictedLabels.dispose();
-            trueLabels.dispose();
-            
+            this.showStatus('Evaluating denoiser (MSE on test set)...');
+            const denoised = this.model.predict(this.testData.noisyXs);
+            const mseTensor = tf.metrics.meanSquaredError(this.testData.xs, denoised);
+            const mse = (await mseTensor.mean().data())[0];
+            tfvis.show.modelSummary({ name: 'Denoiser Model', tab: 'Evaluation' }, this.model);
+            this.showStatus(`Test MSE: ${mse.toFixed(6)}`);
+            denoised.dispose();
+            mseTensor.dispose();
         } catch (error) {
             this.showError(`Evaluation failed: ${error.message}`);
         }
     }
 
     async onTestFive() {
-        if (!this.model || !this.testData) {
-            this.showError('Please load both model and test data first');
+        if (!this.model || !this.testData || !this.testData.noisyXs) {
+            this.showError('Please load model and test data first');
             return;
         }
-
         try {
-            const { batchXs, batchYs, indices } = this.dataLoader.getRandomTestBatch(
-                this.testData.xs, this.testData.ys, 5
+            const { batchClean, batchNoisy } = this.dataLoader.getRandomTestDenoiseBatch(
+                this.testData.xs, this.testData.noisyXs, 5
             );
-            
-            const predictions = this.model.predict(batchXs);
-            const predictedLabels = predictions.argMax(-1);
-            const trueLabels = batchYs.argMax(-1);
-            
-            const predArray = await predictedLabels.array();
-            const trueArray = await trueLabels.array();
-            
-            this.renderPreview(batchXs, predArray, trueArray, indices);
-            
-            // Clean up
-            predictions.dispose();
-            predictedLabels.dispose();
-            trueLabels.dispose();
-            batchXs.dispose();
-            batchYs.dispose();
-            
+            const denoised = this.model.predict(batchNoisy);
+            await this.renderDenoisePreview(batchNoisy, denoised, batchClean);
+            denoised.dispose();
+            batchClean.dispose();
+            batchNoisy.dispose();
         } catch (error) {
             this.showError(`Test preview failed: ${error.message}`);
         }
@@ -201,7 +158,7 @@ class MNISTApp {
         }
 
         try {
-            await this.model.save('downloads://mnist-cnn');
+            await this.model.save('downloads://mnist-denoiser');
             this.showStatus('Model saved successfully!');
         } catch (error) {
             this.showError(`Failed to save model: ${error.message}`);
@@ -257,38 +214,16 @@ class MNISTApp {
         tfvis.visor().toggle();
     }
 
-    createModel() {
+    createDenoiserModel() {
         const model = tf.sequential();
-        
-        model.add(tf.layers.conv2d({
-            filters: 32,
-            kernelSize: 3,
-            activation: 'relu',
-            padding: 'same',
-            inputShape: [28, 28, 1]
-        }));
-        
-        model.add(tf.layers.conv2d({
-            filters: 64,
-            kernelSize: 3,
-            activation: 'relu',
-            padding: 'same'
-        }));
-        
-        model.add(tf.layers.maxPooling2d({ poolSize: 2 }));
-        model.add(tf.layers.dropout({ rate: 0.25 }));
-        model.add(tf.layers.flatten());
-        
-        model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
-        model.add(tf.layers.dropout({ rate: 0.5 }));
-        model.add(tf.layers.dense({ units: 10, activation: 'softmax' }));
-        
-        model.compile({
-            optimizer: 'adam',
-            loss: 'categoricalCrossentropy',
-            metrics: ['accuracy']
-        });
-        
+        model.add(tf.layers.conv2d({ filters: 32, kernelSize: 3, activation: 'relu', padding: 'same', inputShape: [28, 28, 1] }));
+        model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2, padding: 'same' }));
+        model.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu', padding: 'same' }));
+        model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2, padding: 'same' }));
+        model.add(tf.layers.conv2dTranspose({ filters: 64, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu' }));
+        model.add(tf.layers.conv2dTranspose({ filters: 32, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu' }));
+        model.add(tf.layers.conv2d({ filters: 1, kernelSize: 3, activation: 'sigmoid', padding: 'same' }));
+        model.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
         return model;
     }
 
@@ -324,31 +259,32 @@ class MNISTApp {
         });
     }
 
-    renderPreview(images, predicted, trueLabels, indices) {
+    async renderDenoisePreview(noisyBatch, denoisedBatch, cleanBatch) {
         const container = document.getElementById('previewContainer');
         container.innerHTML = '';
-        
-        // Convert tensor to array for processing
-        const imageArray = images.arraySync();
-        
-        imageArray.forEach((image, i) => {
+        const noisyArr = noisyBatch.arraySync();
+        const denoisedArr = denoisedBatch.arraySync();
+        const cleanArr = cleanBatch.arraySync();
+        for (let i = 0; i < noisyArr.length; i++) {
             const item = document.createElement('div');
             item.className = 'preview-item';
-            
-            const canvas = document.createElement('canvas');
-            const label = document.createElement('div');
-            
-            const isCorrect = predicted[i] === trueLabels[i];
-            label.className = isCorrect ? 'correct' : 'wrong';
-            label.textContent = `Pred: ${predicted[i]} | True: ${trueLabels[i]}`;
-            
-            // Draw image to canvas
-            this.dataLoader.draw28x28ToCanvas(tf.tensor(image), canvas, 4);
-            
-            item.appendChild(canvas);
-            item.appendChild(label);
+            const row = document.createElement('div');
+            row.className = 'preview-row';
+            const noisyCanvas = document.createElement('canvas');
+            const denoisedCanvas = document.createElement('canvas');
+            const cleanCanvas = document.createElement('canvas');
+            this.dataLoader.draw28x28ToCanvas(tf.tensor(noisyArr[i]), noisyCanvas, 4);
+            this.dataLoader.draw28x28ToCanvas(tf.tensor(denoisedArr[i]), denoisedCanvas, 4);
+            this.dataLoader.draw28x28ToCanvas(tf.tensor(cleanArr[i]), cleanCanvas, 4);
+            const caption = document.createElement('div');
+            caption.textContent = 'Noisy | Denoised | Clean';
+            row.appendChild(noisyCanvas);
+            row.appendChild(denoisedCanvas);
+            row.appendChild(cleanCanvas);
+            item.appendChild(row);
+            item.appendChild(caption);
             container.appendChild(item);
-        });
+        }
     }
 
     clearPreview() {

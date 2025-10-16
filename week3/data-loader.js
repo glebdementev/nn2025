@@ -59,7 +59,13 @@ class MNISTDataLoader {
     }
 
     async loadTestFromFiles(file) {
-        this.testData = await this.loadCSVFile(file);
+        const clean = await this.loadCSVFile(file);
+        // Create a noisy copy for denoising tasks; store alongside clean
+        const noisyXs = tf.tidy(() => {
+            const noise = this.addGaussianNoise(clean.xs, 0.5);
+            return noise;
+        });
+        this.testData = { xs: clean.xs, ys: clean.ys, count: clean.count, noisyXs };
         return this.testData;
     }
 
@@ -89,6 +95,17 @@ class MNISTDataLoader {
             const batchYs = tf.gather(ys, selectedIndices);
             
             return { batchXs, batchYs, indices: selectedIndices };
+        });
+    }
+
+    // Get matching clean/noisy random batch for denoising preview
+    getRandomTestDenoiseBatch(cleanXs, noisyXs, k = 5) {
+        return tf.tidy(() => {
+            const shuffledIndices = tf.util.createShuffledIndices(cleanXs.shape[0]);
+            const selectedIndices = Array.from(shuffledIndices.slice(0, k));
+            const batchClean = tf.gather(cleanXs, selectedIndices);
+            const batchNoisy = tf.gather(noisyXs, selectedIndices);
+            return { batchClean, batchNoisy, indices: selectedIndices };
         });
     }
 
@@ -125,6 +142,20 @@ class MNISTDataLoader {
         });
     }
 
+    // Additive Gaussian noise clipped to [0,1]
+    addGaussianNoise(xs, std = 0.5) {
+        const shape = xs.shape;
+        const noise = tf.randomNormal(shape, 0, std);
+        const noisy = xs.add(noise).clipByValue(0, 1);
+        noise.dispose();
+        return noisy;
+    }
+
+    // Convenience: returns a new noisy copy
+    makeNoisyCopy(xs, std = 0.5) {
+        return this.addGaussianNoise(xs, std);
+    }
+
     // Clean up stored data
     dispose() {
         if (this.trainData) {
@@ -135,6 +166,7 @@ class MNISTDataLoader {
         if (this.testData) {
             this.testData.xs.dispose();
             this.testData.ys.dispose();
+            if (this.testData.noisyXs) this.testData.noisyXs.dispose();
             this.testData = null;
         }
     }
