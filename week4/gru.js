@@ -16,7 +16,7 @@ class GRUModel {
                 }),
                 tf.layers.dropout({ rate: 0.2 }),
                 tf.layers.gru({
-                    units: 48,
+                    units: 32,
                     returnSequences: false
                 }),
                 tf.layers.dropout({ rate: 0.2 }),

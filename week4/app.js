@@ -50,7 +50,11 @@ class StockPredictionApp {
         try {
             const { X_train, y_train, X_test, y_test, symbols } = this.dataLoader;
             
-            this.model = new GRUModel([12, symbols.length * 2], symbols.length * 3);
+            const sequenceLength = X_train.shape[1];
+            const featureSize = X_train.shape[2];
+            const outputSize = symbols.length * 3;
+            
+            this.model = new GRUModel([sequenceLength, featureSize], outputSize);
             
             document.getElementById('status').textContent = 'Training model...';
             await this.model.train(X_train, y_train, X_test, y_test, 50, 32);

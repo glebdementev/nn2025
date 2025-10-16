@@ -118,7 +118,50 @@ class DataLoader {
             });
         });
 
-        this.featuresPerSymbol = 4;
+        // After initial pass, compute extra rolling-light features per symbol
+        this.symbols.forEach(symbol => {
+            for (let i = 0; i < this.dates.length; i++) {
+                const d0 = this.dates[i];
+                const prev1 = i - 1 >= 0 ? this.dates[i - 1] : null;
+                const prev2 = i - 2 >= 0 ? this.dates[i - 2] : null;
+                if (!this.normalizedData[symbol][d0]) continue;
+
+                const cur = this.stocksData[symbol][d0];
+                const hasPrev1 = prev1 && this.stocksData[symbol][prev1];
+                const hasPrev2 = prev2 && this.stocksData[symbol][prev2];
+
+                // Ret1: (Close_t - Close_{t-1}) / Close_{t-1}
+                const ret1 = hasPrev1 ?
+                    (cur.Close - this.stocksData[symbol][prev1].Close) /
+                    (this.stocksData[symbol][prev1].Close !== 0 ? Math.abs(this.stocksData[symbol][prev1].Close) : 1)
+                    : 0;
+
+                // Mom3: Close_t - Close_{t-3}
+                const mom3 = (i - 3 >= 0 && this.stocksData[symbol][this.dates[i - 3]]) ?
+                    cur.Close - this.stocksData[symbol][this.dates[i - 3]].Close : 0;
+
+                // VolRatio3: Volume_t / mean(Volume_{t-1..t-3})
+                let volMean3 = 0;
+                let volCount = 0;
+                for (let k = 1; k <= 3; k++) {
+                    const idx = i - k;
+                    if (idx >= 0) {
+                        const dk = this.dates[idx];
+                        const pk = this.stocksData[symbol][dk];
+                        if (pk) { volMean3 += pk.Volume; volCount++; }
+                    }
+                }
+                volMean3 = volCount > 0 ? volMean3 / volCount : 1;
+                const volRatio3 = volMean3 !== 0 ? cur.Volume / volMean3 : 0;
+
+                const bucket = this.normalizedData[symbol][d0];
+                bucket.Ret1 = ret1;
+                bucket.Mom3 = mom3;
+                bucket.VolRatio3 = volRatio3;
+            }
+        });
+
+        this.featuresPerSymbol = 7; // Open, Close, RetOC, Range, Ret1, Mom3, VolRatio3
 
         return this.normalizedData;
     }
