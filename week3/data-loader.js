@@ -61,10 +61,7 @@ class MNISTDataLoader {
     async loadTestFromFiles(file) {
         const clean = await this.loadCSVFile(file);
         // Create a noisy copy for denoising tasks; store alongside clean
-        const noisyXs = tf.tidy(() => {
-            const noise = this.addGaussianNoise(clean.xs, 0.5);
-            return noise;
-        });
+        const noisyXs = tf.tidy(() => this.addGaussianNoise(clean.xs, 0.3));
         this.testData = { xs: clean.xs, ys: clean.ys, count: clean.count, noisyXs };
         return this.testData;
     }

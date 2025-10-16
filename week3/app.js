@@ -68,8 +68,8 @@ class MNISTApp {
                 this.trainData.xs, this.trainData.ys, 0.1
             );
             // Create noisy inputs matching the splits
-            const noisyTrainXs = this.dataLoader.makeNoisyCopy(trainXs, 0.5);
-            const noisyValXs = this.dataLoader.makeNoisyCopy(valXs, 0.5);
+            const noisyTrainXs = this.dataLoader.makeNoisyCopy(trainXs, 0.3);
+            const noisyValXs = this.dataLoader.makeNoisyCopy(valXs, 0.3);
 
             // Create or get model
             if (!this.model) {
@@ -80,8 +80,8 @@ class MNISTApp {
             // Train with tfjs-vis callbacks
             const startTime = Date.now();
             const history = await this.model.fit(noisyTrainXs, trainXs, {
-                epochs: 5,
-                batchSize: 128,
+                epochs: 3,
+                batchSize: 64,
                 validationData: [noisyValXs, valXs],
                 shuffle: true,
                 callbacks: tfvis.show.fitCallbacks(
@@ -119,14 +119,14 @@ class MNISTApp {
             return;
         }
         try {
-            this.showStatus('Evaluating denoiser (MSE on test set)...');
+            this.showStatus('Evaluating denoiser (masked MSE on test set)...');
             const denoised = this.model.predict(this.testData.noisyXs);
-            const mseTensor = tf.metrics.meanSquaredError(this.testData.xs, denoised);
-            const mse = (await mseTensor.mean().data())[0];
+            const masked = this.maskedMSE(this.testData.xs, denoised);
+            const mse = (await masked.data())[0];
             tfvis.show.modelSummary({ name: 'Denoiser Model', tab: 'Evaluation' }, this.model);
-            this.showStatus(`Test MSE: ${mse.toFixed(6)}`);
+            this.showStatus(`Test masked MSE: ${mse.toFixed(6)}`);
             denoised.dispose();
-            mseTensor.dispose();
+            masked.dispose();
         } catch (error) {
             this.showError(`Evaluation failed: ${error.message}`);
         }
@@ -216,15 +216,43 @@ class MNISTApp {
 
     createDenoiserModel() {
         const model = tf.sequential();
+        // Encoder
         model.add(tf.layers.conv2d({ filters: 32, kernelSize: 3, activation: 'relu', padding: 'same', inputShape: [28, 28, 1] }));
         model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2, padding: 'same' }));
         model.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu', padding: 'same' }));
         model.add(tf.layers.maxPooling2d({ poolSize: 2, strides: 2, padding: 'same' }));
-        model.add(tf.layers.conv2dTranspose({ filters: 64, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu' }));
-        model.add(tf.layers.conv2dTranspose({ filters: 32, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu' }));
+        // Decoder using upsampling + conv for broader TF.js support
+        model.add(tf.layers.upSampling2d({ size: [2, 2] }));
+        model.add(tf.layers.conv2d({ filters: 64, kernelSize: 3, activation: 'relu', padding: 'same' }));
+        model.add(tf.layers.upSampling2d({ size: [2, 2] }));
+        model.add(tf.layers.conv2d({ filters: 32, kernelSize: 3, activation: 'relu', padding: 'same' }));
         model.add(tf.layers.conv2d({ filters: 1, kernelSize: 3, activation: 'sigmoid', padding: 'same' }));
-        model.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
+        model.compile({ optimizer: tf.train.adam(0.001), loss: (yTrue, yPred) => this.maskedMSE(yTrue, yPred) });
         return model;
+    }
+
+    // Weighted binary cross-entropy to upweight positive (ink) pixels
+    weightedBCE(yTrue, yPred) {
+        const eps = tf.scalar(1e-7);
+        const one = tf.scalar(1);
+        const yPredClipped = yPred.clipByValue(1e-7, 1 - 1e-7);
+        const posWeight = tf.scalar(5.0); // emphasize foreground strokes
+        const weight = yTrue.mul(posWeight).add(one.sub(yTrue));
+        const bce = yTrue.mul(yPredClipped.log()).add(one.sub(yTrue).mul(one.sub(yPredClipped).log()));
+        const loss = bce.mul(weight).mul(tf.scalar(-1)).mean();
+        return loss;
+    }
+
+    // Foreground-masked MSE: ignore zero-valued background pixels
+    maskedMSE(yTrue, yPred) {
+        return tf.tidy(() => {
+            const zero = tf.scalar(0);
+            const eps = tf.scalar(1e-7);
+            const mask = yTrue.greater(zero).cast('float32');
+            const se = yPred.sub(yTrue).square().mul(mask);
+            const denom = mask.sum().add(eps);
+            return se.sum().div(denom);
+        });
     }
 
     async calculateAccuracy(predicted, trueLabels) {
