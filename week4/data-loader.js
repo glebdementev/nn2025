@@ -9,6 +9,7 @@ class DataLoader {
         this.X_test = null;
         this.y_test = null;
         this.testDates = [];
+        this.featuresPerSymbol = 2;
     }
 
     async loadCSV(file) {
@@ -93,21 +94,31 @@ class DataLoader {
             });
         });
 
-        // Normalize data
+        // Normalize data and compute lightweight derived features
         this.symbols.forEach(symbol => {
             this.normalizedData[symbol] = {};
             this.dates.forEach(date => {
                 if (this.stocksData[symbol][date]) {
                     const point = this.stocksData[symbol][date];
+                    const openNorm = (point.Open - minMax[symbol].Open.min) /
+                                     (minMax[symbol].Open.max - minMax[symbol].Open.min);
+                    const closeNorm = (point.Close - minMax[symbol].Close.min) /
+                                      (minMax[symbol].Close.max - minMax[symbol].Close.min);
+                    const denom = point.Open !== 0 ? Math.abs(point.Open) : 1;
+                    const retOC = (point.Close - point.Open) / denom;
+                    const range = (point.High - point.Low) / denom;
+
                     this.normalizedData[symbol][date] = {
-                        Open: (point.Open - minMax[symbol].Open.min) / 
-                              (minMax[symbol].Open.max - minMax[symbol].Open.min),
-                        Close: (point.Close - minMax[symbol].Close.min) / 
-                               (minMax[symbol].Close.max - minMax[symbol].Close.min)
+                        Open: openNorm,
+                        Close: closeNorm,
+                        RetOC: retOC,
+                        Range: range
                     };
                 }
             });
         });
+
+        this.featuresPerSymbol = 4;
 
         return this.normalizedData;
     }
@@ -133,9 +144,12 @@ class DataLoader {
 
                 this.symbols.forEach(symbol => {
                     if (this.normalizedData[symbol][seqDate]) {
+                        const feat = this.normalizedData[symbol][seqDate];
                         timeStepData.push(
-                            this.normalizedData[symbol][seqDate].Open,
-                            this.normalizedData[symbol][seqDate].Close
+                            feat.Open,
+                            feat.Close,
+                            feat.RetOC,
+                            feat.Range
                         );
                     } else {
                         validSequence = false;
@@ -194,7 +208,8 @@ class DataLoader {
             X_test: this.X_test,
             y_test: this.y_test,
             symbols: this.symbols,
-            testDates: this.testDates
+            testDates: this.testDates,
+            featuresPerSymbol: this.featuresPerSymbol
         };
     }
 
@@ -205,5 +220,3 @@ class DataLoader {
         if (this.y_test) this.y_test.dispose();
     }
 }
-
-export default DataLoader;

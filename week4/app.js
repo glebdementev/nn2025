@@ -1,5 +1,3 @@
-import DataLoader from './data-loader.js';
-import GRUModel from './gru.js';
 
 class StockPredictionApp {
     constructor() {

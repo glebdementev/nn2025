@@ -16,7 +16,7 @@ class GRUModel {
                 }),
                 tf.layers.dropout({ rate: 0.2 }),
                 tf.layers.gru({
-                    units: 32,
+                    units: 48,
                     returnSequences: false
                 }),
                 tf.layers.dropout({ rate: 0.2 }),
@@ -85,7 +85,7 @@ class GRUModel {
                 for (let offset = 0; offset < horizon; offset++) {
                     const targetIdx = stockIdx * horizon + offset;
                     const trueVal = yTrueArray[i][targetIdx];
-                    const predVal = yPredArray[i][targetIdx] > 0.5 ? 1 : 0;
+                    const predVal = yPredArray[i][targetIdx] > 0.55 ? 1 : 0;
                     
                     if (trueVal === predVal) correct++;
                     total++;
@@ -111,5 +111,3 @@ class GRUModel {
         }
     }
 }
-
-export default GRUModel;
