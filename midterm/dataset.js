@@ -19,13 +19,56 @@
     return r * 2;
   }
 
-  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=1, ratioMax=3, fill=false) {
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function ensureSamePointCount(cloud, targetPoints) {
+    const out = [];
+    if (cloud.length === 0) return Array.from({length:targetPoints}, () => [0,0,0]);
+    if (cloud.length >= targetPoints) {
+      for (let i=0;i<targetPoints;i++) out.push(cloud[Math.floor(Math.random()*cloud.length)]);
+    } else {
+      for (let i=0;i<targetPoints;i++) out.push(cloud[i % cloud.length]);
+    }
+    return out;
+  }
+
+  // Crop points by an axis-aligned rectangle in XY of a given area share s in [0,0.9]
+  // Base XY domain is [-1,1]x[-1,1] with area 4. Rectangle area = s*4.
+  function cropCloudXY(cloud, shareMin, shareMax) {
+    const sMin = clamp(shareMin ?? 0, 0, 0.9);
+    const sMax = clamp(shareMax ?? 0, 0, 0.9);
+    if (sMax <= 0 || sMin < 0 || sMin > 0.9) return cloud;
+    const lo = Math.min(sMin, sMax);
+    const hi = Math.max(sMin, sMax);
+    const tries = 5;
+    for (let t=0;t<tries;t++) {
+      const s = lo + Math.random()*(hi - lo);
+      // Choose width W in [2s, 2], height H = (4s)/W so that W*H = 4s and both <= 2
+      const wMin = Math.max(0.0001, 2*s);
+      const W = wMin + Math.random()*(2 - wMin);
+      const H = (4*s) / W;
+      const cx = (Math.random()*2 - 1) * (1 - W/2);
+      const cy = (Math.random()*2 - 1) * (1 - H/2);
+      const x0 = cx - W/2, x1 = cx + W/2;
+      const y0 = cy - H/2, y1 = cy + H/2;
+      const cropped = cloud.filter(([x,y,_z]) => x>=x0 && x<=x1 && y>=y0 && y<=y1);
+      if (cropped.length > 0) return cropped;
+    }
+    // Fallback if rectangle missed all points repeatedly: return original
+    return cloud;
+  }
+
+  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=1, ratioMax=3, fill=false, cropShareMin=0, cropShareMax=0) {
     const data = [];
     const labels = [];
     for (let i=0;i<samplesPerClass;i++) {
       for (const [classIndex, shape] of ACTIVE_CLASSES.entries()) {
         const h = randomHeightForRatio(ratioMin, ratioMax);
-        const cloud = window.PointCloudUtils.generateShape(shape, pointsPerCloud, noise, jitter, h, fill);
+        let cloud = window.PointCloudUtils.generateShape(shape, pointsPerCloud, noise, jitter, h, fill);
+        if ((cropShareMin>0 || cropShareMax>0)) {
+          cloud = cropCloudXY(cloud, cropShareMin, cropShareMax);
+        }
+        cloud = ensureSamePointCount(cloud, pointsPerCloud);
         data.push(cloud);
         labels.push(classIndex);
       }

@@ -17,12 +17,16 @@
   const samplesSlider = document.getElementById('samples-slider');
   const ratioMinSlider = document.getElementById('ratio-min-slider');
   const ratioMaxSlider = document.getElementById('ratio-max-slider');
+  const cropShareMinSlider = document.getElementById('crop-share-min-slider');
+  const cropShareMaxSlider = document.getElementById('crop-share-max-slider');
   const noiseValue = document.getElementById('noise-value');
   const jitterValue = document.getElementById('jitter-value');
   const pointsValue = document.getElementById('points-value');
   const samplesValue = document.getElementById('samples-value');
   const ratioMinValue = document.getElementById('ratio-min-value');
   const ratioMaxValue = document.getElementById('ratio-max-value');
+  const cropShareMinValue = document.getElementById('crop-share-min-value');
+  const cropShareMaxValue = document.getElementById('crop-share-max-value');
   const canvas = document.getElementById('point-cloud-canvas');
   const prevBtn = document.getElementById('prev-sample');
   const nextBtn = document.getElementById('next-sample');
@@ -31,6 +35,8 @@
   const legendEl = document.getElementById('legend');
   const evalDiv = document.getElementById('evaluation-results');
   const logDiv = document.getElementById('training-log');
+  const trainChart = document.getElementById('training-chart');
+  const trainSummary = document.getElementById('training-summary');
 
   let noise = parseFloat(noiseSlider.value);
   let jitter = parseFloat(jitterSlider.value);
@@ -39,6 +45,9 @@
   let ratioMin = Math.max(1, Math.min(6, parseFloat(ratioMinSlider.value)));
   let ratioMax = Math.max(1, Math.min(6, parseFloat(ratioMaxSlider.value)));
   if (ratioMin > ratioMax) { const tmp = ratioMin; ratioMin = ratioMax; ratioMax = tmp; }
+  let cropShareMin = Math.max(0, Math.min(0.9, parseFloat(cropShareMinSlider.value || '0')));
+  let cropShareMax = Math.max(0, Math.min(0.9, parseFloat(cropShareMaxSlider.value || '0')));
+  if (cropShareMin > cropShareMax) { const t = cropShareMin; cropShareMin = cropShareMax; cropShareMax = t; }
   let fill = !!(fillToggle && fillToggle.checked);
 
   let dataset = { data: [], labels: [] };
@@ -58,8 +67,10 @@
   };
 
   function logLine(text) {
-    logDiv.textContent += (text + '\n');
-    logDiv.scrollTop = logDiv.scrollHeight;
+    // Keep minimal messages in case needed for debugging
+    if (!logDiv) return;
+    if (!logDiv._text) logDiv._text = '';
+    logDiv._text += (text + '\n');
   }
 
   function ensureSamePointCount(cloud, targetPoints) {
@@ -85,7 +96,7 @@
   }
 
   function handleGenerate() {
-    dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill);
+    dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill, cropShareMin, cropShareMax);
     datasetIndex = 0;
     renderCurrent();
   }
@@ -97,7 +108,7 @@
 
   async function prepareTensors() {
     if (!dataset.data.length) {
-      dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill);
+      dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill, cropShareMin, cropShareMax);
     }
     const { trainData, trainLabels, valData, valLabels } = U.splitTrainVal(dataset.data, dataset.labels, 0.2);
     const inputs = U.cloudsToTensor(trainData);
@@ -114,7 +125,9 @@
     if (!model || model.inputs[0].shape[1] !== pointsPerCloud || model.outputs[0].shape[1] !== U.CLASSES.length) {
       model = M.buildPointNetTiny(pointsPerCloud, U.CLASSES.length);
     }
-    logLine('Starting training...');
+    const history = { epoch: [], loss: [], acc: [], val_loss: [], val_acc: [] };
+    if (trainChart) U.renderTrainingChart(trainChart, history);
+    if (trainSummary) U.renderTrainingSummary(trainSummary, history);
     await model.fit(inputs, labels, {
       epochs: 30,
       batchSize: 32,
@@ -122,11 +135,19 @@
       shuffle: true,
       callbacks: {
         onEpochEnd: (epoch, logs) => {
-          logLine(`Epoch ${epoch+1} | loss=${logs.loss.toFixed(4)} acc=${(logs.acc??logs.accuracy).toFixed(4)} val_loss=${logs.val_loss.toFixed(4)} val_acc=${(logs.val_acc??logs.val_accuracy).toFixed(4)}`);
+          history.epoch.push(epoch+1);
+          history.loss.push(logs.loss);
+          const acc = (logs.acc!=null?logs.acc:logs.accuracy);
+          if (acc!=null) (history.acc||(history.accuracy=[])).push(acc);
+          history.val_loss.push(logs.val_loss);
+          const vacc = (logs.val_acc!=null?logs.val_acc:logs.val_accuracy);
+          if (vacc!=null) (history.val_acc||(history.val_accuracy=[])).push(vacc);
+          if (trainChart) U.renderTrainingChart(trainChart, history);
+          if (trainSummary) U.renderTrainingSummary(trainSummary, history);
         }
       }
     });
-    logLine('Training complete.');
+    if (trainSummary) U.renderTrainingSummary(trainSummary, history);
   }
 
   function argMaxPerRow(t) {
@@ -136,7 +157,7 @@
   async function handleEvaluate() {
     if (!model) return;
     // Create a fresh eval set to avoid contamination
-    const evalSet = U.createToyDataset(Math.max(60, Math.floor(samplesPerClass*0.6)), pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill);
+    const evalSet = U.createToyDataset(Math.max(60, Math.floor(samplesPerClass*0.6)), pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill, cropShareMin, cropShareMax);
     const x = U.cloudsToTensor(evalSet.data);
     const y = U.labelsToOneHot(evalSet.labels, U.CLASSES.length);
     const evalRes = await model.evaluate(x, y, { batchSize: 64 });
@@ -199,6 +220,19 @@
     if (ratioMax < ratioMin) { ratioMin = ratioMax; ratioMinSlider.value = String(ratioMin); }
     ratioMinValue.textContent = ratioMin.toFixed(1);
     ratioMaxValue.textContent = ratioMax.toFixed(1);
+  });
+
+  cropShareMinSlider.addEventListener('input', () => {
+    cropShareMin = Math.max(0, Math.min(0.9, parseFloat(cropShareMinSlider.value)));
+    if (cropShareMin > cropShareMax) { cropShareMax = cropShareMin; cropShareMaxSlider.value = String(cropShareMax); }
+    cropShareMinValue.textContent = cropShareMin.toFixed(2);
+    cropShareMaxValue.textContent = cropShareMax.toFixed(2);
+  });
+  cropShareMaxSlider.addEventListener('input', () => {
+    cropShareMax = Math.max(0, Math.min(0.9, parseFloat(cropShareMaxSlider.value)));
+    if (cropShareMax < cropShareMin) { cropShareMin = cropShareMax; cropShareMinSlider.value = String(cropShareMin); }
+    cropShareMinValue.textContent = cropShareMin.toFixed(2);
+    cropShareMaxValue.textContent = cropShareMax.toFixed(2);
   });
 
   // Button handlers

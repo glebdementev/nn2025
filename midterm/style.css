@@ -36,6 +36,13 @@ canvas{width:100%;height:auto;border-radius:8px;background:radial-gradient(1200p
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .panel{min-height:120px;background:var(--panel);border:1px solid #222834;border-radius:12px;padding:12px}
 .panel.mono{font-family:ui-monospace,Menlo,Monaco,Consolas,monospace;font-size:.9rem;white-space:pre-wrap}
+.metrics{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.metrics div{background:#0c1222;border:1px solid #1b2230;border-radius:8px;padding:6px 10px}
+.table-wrap{overflow:auto;margin-top:8px}
+.table-wrap table{width:100%;border-collapse:collapse}
+.table-wrap th,.table-wrap td{border:1px solid #1f2735;padding:6px 8px;text-align:center}
+.table-wrap thead th{position:sticky;top:0;background:#121826}
+.table-wrap tbody th{text-align:left;background:#0f1624}
 footer{color:var(--muted);text-align:center;padding:20px}
 @media (max-width: 800px){.grid{grid-template-columns:1fr}}
 
