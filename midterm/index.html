@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Point Cloud Classifier</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script defer src="csv.js"></script>
+  <script defer src="shapes.js"></script>
+  <script defer src="dataset.js"></script>
+  <script defer src="viewer.js"></script>
+  <script defer src="metrics.js"></script>
+  <script defer src="model.js"></script>
+  <script defer src="script.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* Fallback minimal styles if style.css fails to load */
+    .no-css-hide { display: none; }
+  </style>
+  <meta name="description" content="Browser-only PointNet-style classifier for toy 3D point clouds (pyramid, box, cylinder)." />
+</head>
+<body>
+  <header>
+    <h1>Point Cloud Classifier</h1>
+    <p class="subtitle">Browser-only · TensorFlow.js · Pyramid | Box | Cylinder</p>
+  </header>
+
+  <details class="spoiler">
+    <summary>Why this is important</summary>
+    <p>
+      A tree crown often has a distinct shape by species (deciduous vs conifer).
+      Training a model on point clouds to capture these geometric cues mirrors how species are classified by crown geometry without data messiness.
+    </p>
+  </details>
+
+  <main>
+    <section class="controls">
+      <div class="row">
+        <label class="btn file-btn">
+          <input type="file" id="upload-csv" accept=".csv" />
+          <span>Upload CSV</span>
+        </label>
+        <button id="generate-dataset" class="btn">Generate Dataset</button>
+        <button id="export-dataset" class="btn" title="Download generated dataset as CSV">Export Dataset</button>
+        <button id="train-model" class="btn accent">Train</button>
+        <button id="evaluate-model" class="btn">Evaluate</button>
+      </div>
+      <div class="row sliders">
+        <label>
+          <span>Classes</span>
+          <span id="class-select" class="class-select"></span>
+        </label>
+        <label>
+          <input type="checkbox" id="fill-toggle" />
+          <span>Fill</span>
+        </label>
+        <label>
+          <span>Noise</span>
+          <input type="range" id="noise-slider" min="0" max="0.5" step="0.01" value="0.05" />
+          <span id="noise-value" class="value">0.05</span>
+        </label>
+        <label>
+          <span>Jitter</span>
+          <input type="range" id="jitter-slider" min="0" max="0.5" step="0.01" value="0.05" />
+          <span id="jitter-value" class="value">0.05</span>
+        </label>
+        <label>
+          <span>Points per cloud</span>
+          <input type="range" id="points-slider" min="64" max="1024" step="32" value="256" />
+          <span id="points-value" class="value">256</span>
+        </label>
+        <label>
+          <span>Samples per class</span>
+          <input type="range" id="samples-slider" min="20" max="400" step="20" value="100" />
+          <span id="samples-value" class="value">100</span>
+        </label>
+        <label>
+          <span>Height ratio min</span>
+          <input type="range" id="ratio-min-slider" min="5" max="6" step="0.1" value="1" />
+          <span id="ratio-min-value" class="value">5.0</span>
+        </label>
+        <label>
+          <span>Height ratio max</span>
+          <input type="range" id="ratio-max-slider" min="1" max="10" step="0.1" value="3" />
+          <span id="ratio-max-value" class="value">10.0</span>
+        </label>
+        <label>
+          <span>XY crop share min</span>
+          <input type="range" id="crop-share-min-slider" min="0" max="0.9" step="0.05" value="0.2" />
+          <span id="crop-share-min-value" class="value">0.20</span>
+        </label>
+        <label>
+          <span>XY crop share max</span>
+          <input type="range" id="crop-share-max-slider" min="0" max="0.9" step="0.05" value="0.6" />
+          <span id="crop-share-max-value" class="value">0.60</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="status">
+      <div class="grid">
+        <div>
+          <h3>Training</h3>
+          <div id="training-log" class="panel">
+            <canvas id="training-chart" width="640" height="160"></canvas>
+            <div id="training-summary" class="metrics"></div>
+          </div>
+        </div>
+        <div>
+          <h3>Evaluation</h3>
+          <div id="evaluation-results" class="panel"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="canvas-wrap">
+      <canvas id="point-cloud-canvas" width="640" height="480"></canvas>
+      <div class="legend" id="legend"></div>
+      <div class="viewer-bar">
+        <div class="group">
+          <button id="prev-sample" class="btn" aria-label="Previous sample">◀</button>
+          <button id="next-sample" class="btn" aria-label="Next sample">▶</button>
+        </div>
+        <div class="group">
+          <label>
+            <span>View</span>
+            <select id="view-mode">
+              <option value="dataset">Dataset</option>
+              <option value="eval">Evaluation</option>
+            </select>
+          </label>
+        </div>
+        <div id="sample-info" class="sample-info"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>TensorFlow.js demo • No backend • CSV format: x,y,z per line</small>
+  </footer>
+</body>
+</html>
+
+
