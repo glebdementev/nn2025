@@ -31,9 +31,8 @@
   <details class="spoiler">
     <summary>Why this is important</summary>
     <p>
-      Simulated tree species classification: a tree crown often has a distinct shape
-      (deciduous vs conifer). Training a model on point clouds to capture these
-      geometric cues mirrors how species could be classified by crown geometry.
+      A tree crown often has a distinct shape by species (deciduous vs conifer).
+      Training a model on point clouds to capture these geometric cues mirrors how species are classified by crown geometry without data messiness.
     </p>
   </details>
 
@@ -69,6 +68,16 @@
           <span>Samples per class</span>
           <input type="range" id="samples-slider" min="20" max="400" step="20" value="100" />
           <span id="samples-value" class="value">100</span>
+        </label>
+        <label>
+          <span>Height ratio min</span>
+          <input type="range" id="ratio-min-slider" min="1" max="6" step="0.1" value="1" />
+          <span id="ratio-min-value" class="value">1.0</span>
+        </label>
+        <label>
+          <span>Height ratio max</span>
+          <input type="range" id="ratio-max-slider" min="1" max="6" step="0.1" value="3" />
+          <span id="ratio-max-value" class="value">3.0</span>
         </label>
       </div>
     </section>

@@ -13,10 +13,14 @@
   const jitterSlider = document.getElementById('jitter-slider');
   const pointsSlider = document.getElementById('points-slider');
   const samplesSlider = document.getElementById('samples-slider');
+  const ratioMinSlider = document.getElementById('ratio-min-slider');
+  const ratioMaxSlider = document.getElementById('ratio-max-slider');
   const noiseValue = document.getElementById('noise-value');
   const jitterValue = document.getElementById('jitter-value');
   const pointsValue = document.getElementById('points-value');
   const samplesValue = document.getElementById('samples-value');
+  const ratioMinValue = document.getElementById('ratio-min-value');
+  const ratioMaxValue = document.getElementById('ratio-max-value');
   const canvas = document.getElementById('point-cloud-canvas');
   const prevBtn = document.getElementById('prev-sample');
   const nextBtn = document.getElementById('next-sample');
@@ -29,6 +33,9 @@
   let jitter = parseFloat(jitterSlider.value);
   let pointsPerCloud = parseInt(pointsSlider.value, 10);
   let samplesPerClass = parseInt(samplesSlider.value, 10);
+  let ratioMin = Math.max(1, Math.min(6, parseFloat(ratioMinSlider.value)));
+  let ratioMax = Math.max(1, Math.min(6, parseFloat(ratioMaxSlider.value)));
+  if (ratioMin > ratioMax) { const tmp = ratioMin; ratioMin = ratioMax; ratioMax = tmp; }
 
   let dataset = { data: [], labels: [] };
   let datasetIndex = 0;
@@ -65,7 +72,7 @@
   }
 
   function handleGenerate() {
-    dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter);
+    dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax);
     datasetIndex = 0;
     renderCurrent();
   }
@@ -77,7 +84,7 @@
 
   async function prepareTensors() {
     if (!dataset.data.length) {
-      dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter);
+      dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax);
     }
     const { trainData, trainLabels, valData, valLabels } = U.splitTrainVal(dataset.data, dataset.labels, 0.2);
     const inputs = U.cloudsToTensor(trainData);
@@ -116,7 +123,7 @@
   async function handleEvaluate() {
     if (!model) return;
     // Create a fresh eval set to avoid contamination
-    const evalSet = U.createToyDataset(Math.max(60, Math.floor(samplesPerClass*0.6)), pointsPerCloud, noise, jitter);
+    const evalSet = U.createToyDataset(Math.max(60, Math.floor(samplesPerClass*0.6)), pointsPerCloud, noise, jitter, ratioMin, ratioMax);
     const x = U.cloudsToTensor(evalSet.data);
     const y = U.labelsToOneHot(evalSet.labels, U.CLASSES.length);
     const evalRes = await model.evaluate(x, y, { batchSize: 64 });
@@ -168,6 +175,18 @@
   jitterSlider.addEventListener('input', () => { jitter = parseFloat(jitterSlider.value); jitterValue.textContent = jitter.toFixed(2); });
   pointsSlider.addEventListener('input', () => { pointsPerCloud = parseInt(pointsSlider.value, 10); pointsValue.textContent = String(pointsPerCloud); });
   samplesSlider.addEventListener('input', () => { samplesPerClass = parseInt(samplesSlider.value, 10); samplesValue.textContent = String(samplesPerClass); });
+  ratioMinSlider.addEventListener('input', () => {
+    ratioMin = Math.max(1, Math.min(6, parseFloat(ratioMinSlider.value)));
+    if (ratioMin > ratioMax) { ratioMax = ratioMin; ratioMaxSlider.value = String(ratioMax); }
+    ratioMinValue.textContent = ratioMin.toFixed(1);
+    ratioMaxValue.textContent = ratioMax.toFixed(1);
+  });
+  ratioMaxSlider.addEventListener('input', () => {
+    ratioMax = Math.max(1, Math.min(6, parseFloat(ratioMaxSlider.value)));
+    if (ratioMax < ratioMin) { ratioMin = ratioMax; ratioMinSlider.value = String(ratioMin); }
+    ratioMinValue.textContent = ratioMin.toFixed(1);
+    ratioMaxValue.textContent = ratioMax.toFixed(1);
+  });
 
   // Button handlers
   uploadInput.addEventListener('change', (ev) => { handleUpload(ev); });

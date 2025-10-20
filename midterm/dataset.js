@@ -6,24 +6,23 @@
   const CLASSES = ["pyramid", "box", "cylinder"];
   NS.CLASSES = CLASSES;
 
-  // Distinct height ranges per class (random within range each sample)
-  const HEIGHT_RANGES = {
-    pyramid: [0.8, 1.6],
-    box: [0.6, 1.2],
-    cylinder: [1.0, 2.0],
-  };
-
-  function randomHeightFor(shape) {
-    const [a,b] = HEIGHT_RANGES[shape];
-    return a + Math.random()*(b-a);
+  // Height determined by height-to-width ratio r in [ratioMin, ratioMax]
+  // Base width across x,y is 2 (from -1 to 1), so height = r * 2
+  function randomHeightForRatio(ratioMin, ratioMax) {
+    const rMin = Math.max(1, Math.min(6, ratioMin));
+    const rMax = Math.max(1, Math.min(6, ratioMax));
+    const lo = Math.min(rMin, rMax);
+    const hi = Math.max(rMin, rMax);
+    const r = lo + Math.random()*(hi - lo);
+    return r * 2;
   }
 
-  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter) {
+  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=1, ratioMax=3) {
     const data = [];
     const labels = [];
     for (const [classIndex, shape] of CLASSES.entries()) {
       for (let i=0;i<samplesPerClass;i++) {
-        const h = randomHeightFor(shape);
+        const h = randomHeightForRatio(ratioMin, ratioMax);
         const cloud = window.PointCloudUtils.generateShape(shape, pointsPerCloud, noise, jitter, h);
         data.push(cloud);
         labels.push(classIndex);
