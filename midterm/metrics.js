@@ -44,17 +44,18 @@
     if (history.accuracy && history.accuracy.length) series.push({ key: 'accuracy', data: history.accuracy, color: '#22c55e' });
     if (history.val_accuracy && history.val_accuracy.length) series.push({ key: 'val_accuracy', data: history.val_accuracy, color: '#16a34a' });
 
-    if (!series.length) return;
-
     const pad = { l: 36, r: 8, t: 8, b: 20 };
     const plotW = w - pad.l - pad.r;
     const plotH = h - pad.t - pad.b;
     const n = Math.max(1, epochs.length);
-    const xFor = (i) => pad.l + (i/(n-1)) * plotW;
+    const xFor = (i) => {
+      if (n <= 1) return pad.l;
+      return pad.l + (i/(n-1)) * plotW;
+    };
 
     let yMin = Infinity, yMax = -Infinity;
     for (const s of series) for (const v of s.data) { if (v<yMin) yMin=v; if (v>yMax) yMax=v; }
-    if (!isFinite(yMin) || !isFinite(yMax)) return;
+    if (!isFinite(yMin) || !isFinite(yMax)) { yMin = 0; yMax = 1; }
     if (yMin === yMax) { yMin -= 1; yMax += 1; }
     const yFor = (v) => pad.t + (1 - (v - yMin) / (yMax - yMin)) * plotH;
 
@@ -82,6 +83,18 @@
         if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       ctx.stroke();
+    }
+
+    // Point markers for visibility on early epochs
+    for (const s of series) {
+      ctx.fillStyle = s.color;
+      for (let i=0;i<s.data.length;i++) {
+        const x = xFor(i);
+        const y = yFor(s.data[i]);
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI*2);
+        ctx.fill();
+      }
     }
 
     // Legend

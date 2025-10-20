@@ -119,7 +119,8 @@
   }
 
   async function handleTrain() {
-    logDiv.textContent = '';
+    // Do not clear the container; it holds the chart and summary
+    if (trainSummary) trainSummary.innerHTML = '';
     const { inputs, labels, valInputs, valLbls } = await prepareTensors();
     trainTensors = { inputs, labels, valInputs, valLbls };
     if (!model || model.inputs[0].shape[1] !== pointsPerCloud || model.outputs[0].shape[1] !== U.CLASSES.length) {
