@@ -3,8 +3,10 @@
 (function(){
   const NS = window.PointCloudUtils || (window.PointCloudUtils = {});
 
-  const CLASSES = ["pyramid", "box", "cylinder"];
-  NS.CLASSES = CLASSES;
+  const ALL_CLASSES = ["pyramid", "box", "cylinder", "ellipsoid", "paraboloid", "cone"];
+  let ACTIVE_CLASSES = ["pyramid", "box", "cylinder"];
+  NS.ALL_CLASSES = ALL_CLASSES;
+  NS.CLASSES = ACTIVE_CLASSES;
 
   // Height determined by height-to-width ratio r in [ratioMin, ratioMax]
   // Base width across x,y is 2 (from -1 to 1), so height = r * 2
@@ -17,13 +19,13 @@
     return r * 2;
   }
 
-  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=1, ratioMax=3) {
+  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=1, ratioMax=3, fill=false) {
     const data = [];
     const labels = [];
-    for (const [classIndex, shape] of CLASSES.entries()) {
-      for (let i=0;i<samplesPerClass;i++) {
+    for (let i=0;i<samplesPerClass;i++) {
+      for (const [classIndex, shape] of ACTIVE_CLASSES.entries()) {
         const h = randomHeightForRatio(ratioMin, ratioMax);
-        const cloud = window.PointCloudUtils.generateShape(shape, pointsPerCloud, noise, jitter, h);
+        const cloud = window.PointCloudUtils.generateShape(shape, pointsPerCloud, noise, jitter, h, fill);
         data.push(cloud);
         labels.push(classIndex);
       }
@@ -73,6 +75,14 @@
   NS.cloudsToTensor = cloudsToTensor;
   NS.labelsToOneHot = labelsToOneHot;
   NS.splitTrainVal = splitTrainVal;
+  NS.setActiveClasses = function(selected) {
+    const unique = Array.from(new Set((selected||[]).filter(s => ALL_CLASSES.includes(s))));
+    if (unique.length === 0) return ACTIVE_CLASSES; // ignore empty selections
+    ACTIVE_CLASSES = unique.slice();
+    NS.CLASSES = ACTIVE_CLASSES;
+    return ACTIVE_CLASSES;
+  };
+  NS.getActiveClasses = function(){ return ACTIVE_CLASSES.slice(); };
 })();
 
 

@@ -4,7 +4,9 @@
   const NS = window.PointCloudUtils || (window.PointCloudUtils = {});
 
   function createOrbitViewer(canvas) {
-    let yaw = 0.6, pitch = 0.5, radius = 2.2;
+    let yaw = 0.6, pitch = 0.5;
+    // Auto-fit scale derived from data; userZoom is multiplicative for manual zoom
+    let autoRadius = 1, userZoom = 1;
     let isDragging = false, lastX = 0, lastY = 0;
     let currentCloud = null;
 
@@ -15,7 +17,8 @@
       const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
       const yr2 = yr * cosP - z * sinP;
       const zr2 = yr * sinP + z * cosP;
-      const s = Math.min(canvas.width, canvas.height) * (0.45 / radius);
+      const totalRadius = Math.max(1e-6, autoRadius * userZoom);
+      const s = Math.min(canvas.width, canvas.height) * (0.45 / totalRadius);
       const cx = canvas.width/2, cy = canvas.height/2;
       return { px: cx + xr * s, py: cy - yr2 * s, depth: zr2 };
     }
@@ -38,16 +41,43 @@
     function onDown(e){ isDragging = true; lastX=e.clientX; lastY=e.clientY; }
     function onUp(){ isDragging = false; }
     function onMove(e){ if(!isDragging) return; const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY; yaw+=dx*0.01; pitch+=dy*0.01; pitch=Math.max(-Math.PI/2+0.01, Math.min(Math.PI/2-0.01, pitch)); if(currentCloud) draw(currentCloud); }
-    function onWheel(e){ e.preventDefault(); const factor=Math.exp(-e.deltaY*0.001); radius=Math.max(0.5, Math.min(5, radius*factor)); if(currentCloud) draw(currentCloud); }
+    function onWheel(e){
+      e.preventDefault();
+      const factor = Math.exp(-e.deltaY*0.001);
+      // Wide bounds so user can meaningfully zoom while keeping initial auto-fit
+      userZoom = Math.max(0.05, Math.min(50, userZoom * factor));
+      if (currentCloud) draw(currentCloud);
+    }
 
-    function render(cloud, color){ currentCloud = cloud; draw(cloud, color); }
+    function computeAutoRadius(cloud){
+      let r = 0;
+      for (let i=0;i<cloud.length;i++) {
+        const p = cloud[i];
+        const rr = Math.hypot(p[0], p[1], p[2]);
+        if (rr > r) r = rr;
+      }
+      return Math.max(1e-6, r);
+    }
+
+    function render(cloud, color){
+      currentCloud = cloud;
+      autoRadius = computeAutoRadius(cloud);
+      // Keep userZoom as-is so zoom persists across renders; ensure draw fits by autoRadius
+      draw(cloud, color);
+    }
 
     canvas.addEventListener('mousedown', onDown);
     window.addEventListener('mouseup', onUp);
     window.addEventListener('mousemove', onMove);
     canvas.addEventListener('wheel', onWheel, { passive: false });
 
-    return { render, setYaw:(v)=>{yaw=v; if(currentCloud)draw(currentCloud);}, setPitch:(v)=>{pitch=v; if(currentCloud)draw(currentCloud);}, setRadius:(v)=>{radius=v; if(currentCloud)draw(currentCloud);} };
+    return {
+      render,
+      setYaw:(v)=>{ yaw=v; if(currentCloud) draw(currentCloud); },
+      setPitch:(v)=>{ pitch=v; if(currentCloud) draw(currentCloud); },
+      // Back-compat: interpret setRadius as setting overall radius; map to userZoom
+      setRadius:(v)=>{ userZoom = Math.max(1e-6, v) / Math.max(1e-6, autoRadius); if(currentCloud) draw(currentCloud); }
+    };
   }
 
   NS.createOrbitViewer = createOrbitViewer;

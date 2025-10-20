@@ -9,6 +9,8 @@
   const exportBtn = document.getElementById('export-dataset');
   const trainBtn = document.getElementById('train-model');
   const evalBtn = document.getElementById('evaluate-model');
+  const classSelect = document.getElementById('class-select');
+  const fillToggle = document.getElementById('fill-toggle');
   const noiseSlider = document.getElementById('noise-slider');
   const jitterSlider = document.getElementById('jitter-slider');
   const pointsSlider = document.getElementById('points-slider');
@@ -26,6 +28,7 @@
   const nextBtn = document.getElementById('next-sample');
   const viewModeSel = document.getElementById('view-mode');
   const sampleInfo = document.getElementById('sample-info');
+  const legendEl = document.getElementById('legend');
   const evalDiv = document.getElementById('evaluation-results');
   const logDiv = document.getElementById('training-log');
 
@@ -36,6 +39,7 @@
   let ratioMin = Math.max(1, Math.min(6, parseFloat(ratioMinSlider.value)));
   let ratioMax = Math.max(1, Math.min(6, parseFloat(ratioMaxSlider.value)));
   if (ratioMin > ratioMax) { const tmp = ratioMin; ratioMin = ratioMax; ratioMax = tmp; }
+  let fill = !!(fillToggle && fillToggle.checked);
 
   let dataset = { data: [], labels: [] };
   let datasetIndex = 0;
@@ -43,6 +47,15 @@
   let evalIndex = 0;
   let trainTensors = null; // {inputs, labels, valInputs, valLabels}
   let model = null;
+
+  const CLASS_COLOR = {
+    pyramid: '#f97316',
+    box: '#3b82f6',
+    cylinder: '#a855f7',
+    ellipsoid: '#10b981',
+    paraboloid: '#eab308',
+    cone: '#ef4444',
+  };
 
   function logLine(text) {
     logDiv.textContent += (text + '\n');
@@ -72,7 +85,7 @@
   }
 
   function handleGenerate() {
-    dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax);
+    dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill);
     datasetIndex = 0;
     renderCurrent();
   }
@@ -84,7 +97,7 @@
 
   async function prepareTensors() {
     if (!dataset.data.length) {
-      dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax);
+      dataset = U.createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill);
     }
     const { trainData, trainLabels, valData, valLabels } = U.splitTrainVal(dataset.data, dataset.labels, 0.2);
     const inputs = U.cloudsToTensor(trainData);
@@ -98,7 +111,7 @@
     logDiv.textContent = '';
     const { inputs, labels, valInputs, valLbls } = await prepareTensors();
     trainTensors = { inputs, labels, valInputs, valLbls };
-    if (!model || model.inputs[0].shape[1] !== pointsPerCloud) {
+    if (!model || model.inputs[0].shape[1] !== pointsPerCloud || model.outputs[0].shape[1] !== U.CLASSES.length) {
       model = M.buildPointNetTiny(pointsPerCloud, U.CLASSES.length);
     }
     logLine('Starting training...');
@@ -123,7 +136,7 @@
   async function handleEvaluate() {
     if (!model) return;
     // Create a fresh eval set to avoid contamination
-    const evalSet = U.createToyDataset(Math.max(60, Math.floor(samplesPerClass*0.6)), pointsPerCloud, noise, jitter, ratioMin, ratioMax);
+    const evalSet = U.createToyDataset(Math.max(60, Math.floor(samplesPerClass*0.6)), pointsPerCloud, noise, jitter, ratioMin, ratioMax, fill);
     const x = U.cloudsToTensor(evalSet.data);
     const y = U.labelsToOneHot(evalSet.labels, U.CLASSES.length);
     const evalRes = await model.evaluate(x, y, { batchSize: 64 });
@@ -152,7 +165,7 @@
     } else if (dataset.data.length) {
       const cloud = dataset.data[datasetIndex];
       const label = dataset.labels[datasetIndex];
-      const color = label===0?'#f97316':label===1?'#3b82f6':'#a855f7';
+      const color = CLASS_COLOR[U.CLASSES[label]] || '#e6edf3';
       viewer.render(cloud, color);
       sampleInfo.textContent = `Dataset ${datasetIndex+1}/${dataset.data.length} · Class: ${U.CLASSES[label]}`;
     } else {
@@ -194,12 +207,62 @@
   trainBtn.addEventListener('click', () => { handleTrain(); });
   evalBtn.addEventListener('click', () => { handleEvaluate(); });
   exportBtn.addEventListener('click', () => { handleExport(); });
+  if (fillToggle) fillToggle.addEventListener('change', () => { fill = !!fillToggle.checked; dataset = {data:[],labels:[]}; renderCurrent(); });
   prevBtn.addEventListener('click', () => step(-1));
   nextBtn.addEventListener('click', () => step(1));
   viewModeSel.addEventListener('change', () => renderCurrent());
 
   // Initialize viewer
   const viewer = U.createOrbitViewer(canvas);
+
+  function renderLegend() {
+    const classes = U.CLASSES;
+    legendEl.innerHTML = classes.map(c => `<span class="dot ${cssClassFor(c)}"></span><span>${titleFor(c)}</span>`).join(' ');
+  }
+
+  function cssClassFor(c){
+    switch(c){
+      case 'pyramid': return 'pyr';
+      case 'box': return 'box';
+      case 'cylinder': return 'cyl';
+      case 'ellipsoid': return 'ell';
+      case 'paraboloid': return 'par';
+      case 'cone': return 'cone';
+      default: return '';
+    }
+  }
+
+  function titleFor(c){ return c.charAt(0).toUpperCase()+c.slice(1); }
+
+  function renderClassSelect() {
+    const all = U.ALL_CLASSES || ['pyramid','box','cylinder','ellipsoid','paraboloid','cone'];
+    const active = new Set(U.getActiveClasses ? U.getActiveClasses() : U.CLASSES);
+    classSelect.innerHTML = all.map(c => {
+      const id = `cls-${c}`;
+      return `<label for="${id}"><input type="checkbox" id="${id}" value="${c}" ${active.has(c)?'checked':''}/> ${titleFor(c)}</label>`;
+    }).join(' ');
+    for (const input of classSelect.querySelectorAll('input[type=checkbox]')) {
+      input.addEventListener('change', onClassToggleChange);
+    }
+  }
+
+  function onClassToggleChange(){
+    const selected = Array.from(classSelect.querySelectorAll('input[type=checkbox]:checked')).map(i => i.value);
+    const updated = U.setActiveClasses(selected);
+    // Invalidate model if class count changed
+    if (model && model.outputs[0].shape[1] !== updated.length) {
+      model = null;
+    }
+    // Regenerate dataset to reflect new label mapping
+    dataset = { data: [], labels: [] };
+    evalCache = null;
+    datasetIndex = 0;
+    renderLegend();
+    renderCurrent();
+  }
+
+  renderClassSelect();
+  renderLegend();
 })();
 
 
