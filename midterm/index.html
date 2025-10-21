@@ -27,16 +27,29 @@
     <h1>Point Cloud Classifier</h1>
     <p class="subtitle">Browser-only · TensorFlow.js · Pyramid | Box | Cylinder</p>
   </header>
-
-  <details class="spoiler">
-    <summary>Why this is important</summary>
-    <p>
-      A tree crown often has a distinct shape by species (deciduous vs conifer).
-      Training a model on point clouds to capture these geometric cues mirrors how species are classified by crown geometry without data messiness.
-    </p>
-  </details>
-
   <main>
+    <details class="spoiler">
+      <summary>Why this is important</summary>
+      <p>
+        A tree crown often has a distinct shape by species (deciduous vs conifer).
+        Training a model on point clouds to capture these geometric cues mirrors how species are classified by crown geometry without data messiness.
+      </p>
+    </details>
+    <details class="spoiler">
+      <summary>How the model works (architecture & purpose)</summary>
+      <p>
+        This demo classifies toy 3D point clouds (pyramid, box, cylinder) entirely in the browser using a tiny PointNet-style network implemented in TensorFlow.js.
+      </p>
+      <p>
+        Architecture in <code>model.js</code>: the input tensor has shape [batch, points, 3] and goes through shared MLP layers realized as 1×1 Conv1D with ReLU activations (64 → 128 → 256). A GlobalMaxPooling1D then aggregates across points to form a permutation‑invariant global feature. Finally, two dense layers (128, 64) and a softmax output produce class probabilities.
+      </p>
+      <p>
+        How it captures shape: the pointwise (1×1) convolutions learn per‑point descriptors (e.g., height z, radial distance √(x²+y²), edge/corner cues). Because weights are shared over points, the same detector is applied to every point. The global max pool selects the strongest responses over the cloud, making predictions insensitive to point ordering and robust to missing points and noise. The dense layers combine these pooled cues to distinguish between flat faces and sharp corners (box), a single apex and sloped faces (pyramid), and circular symmetry with consistent radius along height (cylinder).
+      </p>
+      <p>
+        Training uses Adam with categorical cross‑entropy and tracks accuracy. Sliders control dataset size, point count, noise and jitter, which stress‑test invariances and generalization.
+      </p>
+    </details>
     <section class="controls">
       <div class="row">
         <label class="btn file-btn">
@@ -79,12 +92,12 @@
         </label>
         <label>
           <span>Height ratio min</span>
-          <input type="range" id="ratio-min-slider" min="5" max="6" step="0.1" value="1" />
-          <span id="ratio-min-value" class="value">5.0</span>
+          <input type="range" id="ratio-min-slider" min="3" max="10" step="0.1" value="3" />
+          <span id="ratio-min-value" class="value">3.0</span>
         </label>
         <label>
           <span>Height ratio max</span>
-          <input type="range" id="ratio-max-slider" min="1" max="10" step="0.1" value="3" />
+          <input type="range" id="ratio-max-slider" min="3" max="10" step="0.1" value="10" />
           <span id="ratio-max-value" class="value">10.0</span>
         </label>
         <label>

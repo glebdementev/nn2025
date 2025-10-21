@@ -11,8 +11,8 @@
   // Height determined by height-to-width ratio r in [ratioMin, ratioMax]
   // Base width across x,y is 2 (from -1 to 1), so height = r * 2
   function randomHeightForRatio(ratioMin, ratioMax) {
-    const rMin = Math.max(1, Math.min(6, ratioMin));
-    const rMax = Math.max(1, Math.min(6, ratioMax));
+    const rMin = Math.max(3, Math.min(10, ratioMin));
+    const rMax = Math.max(3, Math.min(10, ratioMax));
     const lo = Math.min(rMin, rMax);
     const hi = Math.max(rMin, rMax);
     const r = lo + Math.random()*(hi - lo);
@@ -58,7 +58,7 @@
     return cloud;
   }
 
-  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=1, ratioMax=3, fill=false, cropShareMin=0, cropShareMax=0) {
+  function createToyDataset(samplesPerClass, pointsPerCloud, noise, jitter, ratioMin=3, ratioMax=10, fill=false, cropShareMin=0, cropShareMax=0) {
     const data = [];
     const labels = [];
     for (let i=0;i<samplesPerClass;i++) {

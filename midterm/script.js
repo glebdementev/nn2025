@@ -42,8 +42,8 @@
   let jitter = parseFloat(jitterSlider.value);
   let pointsPerCloud = parseInt(pointsSlider.value, 10);
   let samplesPerClass = parseInt(samplesSlider.value, 10);
-  let ratioMin = Math.max(1, Math.min(6, parseFloat(ratioMinSlider.value)));
-  let ratioMax = Math.max(1, Math.min(6, parseFloat(ratioMaxSlider.value)));
+  let ratioMin = Math.max(3, Math.min(10, parseFloat(ratioMinSlider.value)));
+  let ratioMax = Math.max(3, Math.min(10, parseFloat(ratioMaxSlider.value)));
   if (ratioMin > ratioMax) { const tmp = ratioMin; ratioMin = ratioMax; ratioMax = tmp; }
   let cropShareMin = Math.max(0, Math.min(0.9, parseFloat(cropShareMinSlider.value || '0')));
   let cropShareMax = Math.max(0, Math.min(0.9, parseFloat(cropShareMaxSlider.value || '0')));
@@ -211,13 +211,13 @@
   pointsSlider.addEventListener('input', () => { pointsPerCloud = parseInt(pointsSlider.value, 10); pointsValue.textContent = String(pointsPerCloud); });
   samplesSlider.addEventListener('input', () => { samplesPerClass = parseInt(samplesSlider.value, 10); samplesValue.textContent = String(samplesPerClass); });
   ratioMinSlider.addEventListener('input', () => {
-    ratioMin = Math.max(1, Math.min(6, parseFloat(ratioMinSlider.value)));
+    ratioMin = Math.max(3, Math.min(10, parseFloat(ratioMinSlider.value)));
     if (ratioMin > ratioMax) { ratioMax = ratioMin; ratioMaxSlider.value = String(ratioMax); }
     ratioMinValue.textContent = ratioMin.toFixed(1);
     ratioMaxValue.textContent = ratioMax.toFixed(1);
   });
   ratioMaxSlider.addEventListener('input', () => {
-    ratioMax = Math.max(1, Math.min(6, parseFloat(ratioMaxSlider.value)));
+    ratioMax = Math.max(3, Math.min(10, parseFloat(ratioMaxSlider.value)));
     if (ratioMax < ratioMin) { ratioMin = ratioMax; ratioMinSlider.value = String(ratioMin); }
     ratioMinValue.textContent = ratioMin.toFixed(1);
     ratioMaxValue.textContent = ratioMax.toFixed(1);
